@@ -19,6 +19,7 @@ import { Route as AuthenticatedContaRouteImport } from './routes/_authenticated/
 import { Route as AuthenticatedAdminRouteRouteImport } from './routes/_authenticated/admin/route'
 import { Route as AuthenticatedAdminIndexRouteImport } from './routes/_authenticated/admin/index'
 import { Route as AuthenticatedAdminNovoRouteImport } from './routes/_authenticated/admin/novo'
+import { Route as AuthenticatedAdminIdRouteImport } from './routes/_authenticated/admin/$id'
 
 const ResetPasswordRoute = ResetPasswordRouteImport.update({
   id: '/reset-password',
@@ -69,6 +70,11 @@ const AuthenticatedAdminNovoRoute = AuthenticatedAdminNovoRouteImport.update({
   path: '/novo',
   getParentRoute: () => AuthenticatedAdminRouteRoute,
 } as any)
+const AuthenticatedAdminIdRoute = AuthenticatedAdminIdRouteImport.update({
+  id: '/$id',
+  path: '/$id',
+  getParentRoute: () => AuthenticatedAdminRouteRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -78,6 +84,7 @@ export interface FileRoutesByFullPath {
   '/admin': typeof AuthenticatedAdminRouteRouteWithChildren
   '/conta': typeof AuthenticatedContaRoute
   '/produtos/$id': typeof ProdutosIdRoute
+  '/admin/$id': typeof AuthenticatedAdminIdRoute
   '/admin/novo': typeof AuthenticatedAdminNovoRoute
   '/admin/': typeof AuthenticatedAdminIndexRoute
 }
@@ -88,6 +95,7 @@ export interface FileRoutesByTo {
   '/reset-password': typeof ResetPasswordRoute
   '/conta': typeof AuthenticatedContaRoute
   '/produtos/$id': typeof ProdutosIdRoute
+  '/admin/$id': typeof AuthenticatedAdminIdRoute
   '/admin/novo': typeof AuthenticatedAdminNovoRoute
   '/admin': typeof AuthenticatedAdminIndexRoute
 }
@@ -101,6 +109,7 @@ export interface FileRoutesById {
   '/_authenticated/admin': typeof AuthenticatedAdminRouteRouteWithChildren
   '/_authenticated/conta': typeof AuthenticatedContaRoute
   '/produtos/$id': typeof ProdutosIdRoute
+  '/_authenticated/admin/$id': typeof AuthenticatedAdminIdRoute
   '/_authenticated/admin/novo': typeof AuthenticatedAdminNovoRoute
   '/_authenticated/admin/': typeof AuthenticatedAdminIndexRoute
 }
@@ -114,6 +123,7 @@ export interface FileRouteTypes {
     | '/admin'
     | '/conta'
     | '/produtos/$id'
+    | '/admin/$id'
     | '/admin/novo'
     | '/admin/'
   fileRoutesByTo: FileRoutesByTo
@@ -124,6 +134,7 @@ export interface FileRouteTypes {
     | '/reset-password'
     | '/conta'
     | '/produtos/$id'
+    | '/admin/$id'
     | '/admin/novo'
     | '/admin'
   id:
@@ -136,6 +147,7 @@ export interface FileRouteTypes {
     | '/_authenticated/admin'
     | '/_authenticated/conta'
     | '/produtos/$id'
+    | '/_authenticated/admin/$id'
     | '/_authenticated/admin/novo'
     | '/_authenticated/admin/'
   fileRoutesById: FileRoutesById
@@ -220,16 +232,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAdminNovoRouteImport
       parentRoute: typeof AuthenticatedAdminRouteRoute
     }
+    '/_authenticated/admin/$id': {
+      id: '/_authenticated/admin/$id'
+      path: '/$id'
+      fullPath: '/admin/$id'
+      preLoaderRoute: typeof AuthenticatedAdminIdRouteImport
+      parentRoute: typeof AuthenticatedAdminRouteRoute
+    }
   }
 }
 
 interface AuthenticatedAdminRouteRouteChildren {
+  AuthenticatedAdminIdRoute: typeof AuthenticatedAdminIdRoute
   AuthenticatedAdminNovoRoute: typeof AuthenticatedAdminNovoRoute
   AuthenticatedAdminIndexRoute: typeof AuthenticatedAdminIndexRoute
 }
 
 const AuthenticatedAdminRouteRouteChildren: AuthenticatedAdminRouteRouteChildren =
   {
+    AuthenticatedAdminIdRoute: AuthenticatedAdminIdRoute,
     AuthenticatedAdminNovoRoute: AuthenticatedAdminNovoRoute,
     AuthenticatedAdminIndexRoute: AuthenticatedAdminIndexRoute,
   }
