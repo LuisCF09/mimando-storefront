@@ -13,18 +13,21 @@ const productQuery = (id: string) =>
   });
 
 export const Route = createFileRoute("/produtos/$id")({
-  head: ({ loaderData }) => ({
-    meta: [
-      { title: loaderData ? `${loaderData.nome} — Mimando` : "Produto — Mimando" },
-      {
-        name: "description",
-        content: loaderData?.descricao_curta || "Detalhes do produto na Mimando Papelaria.",
-      },
-      { property: "og:title", content: loaderData?.nome ?? "Produto" },
-      { property: "og:description", content: loaderData?.descricao_curta ?? "" },
-      ...(loaderData?.imagem_url ? [{ property: "og:image", content: loaderData.imagem_url }] : []),
-    ],
-  }),
+  head: ({ loaderData }) => {
+    const d = loaderData as Awaited<ReturnType<typeof getProduct>> | undefined;
+    return {
+      meta: [
+        { title: d ? `${d.nome} — Mimando` : "Produto — Mimando" },
+        {
+          name: "description",
+          content: d?.descricao_curta || "Detalhes do produto na Mimando Papelaria.",
+        },
+        { property: "og:title", content: d?.nome ?? "Produto" },
+        { property: "og:description", content: d?.descricao_curta ?? "" },
+        ...(d?.imagem_url ? [{ property: "og:image", content: d.imagem_url }] : []),
+      ],
+    };
+  },
   loader: async ({ context, params }) => {
     const data = await context.queryClient.ensureQueryData(productQuery(params.id));
     if (!data) throw notFound();
