@@ -9,11 +9,17 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as ResetPasswordRouteImport } from './routes/reset-password'
 import { Route as ProdutosRouteImport } from './routes/produtos'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as ProdutosIdRouteImport } from './routes/produtos.$id'
 
+const ResetPasswordRoute = ResetPasswordRouteImport.update({
+  id: '/reset-password',
+  path: '/reset-password',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ProdutosRoute = ProdutosRouteImport.update({
   id: '/produtos',
   path: '/produtos',
@@ -39,12 +45,14 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
   '/produtos': typeof ProdutosRouteWithChildren
+  '/reset-password': typeof ResetPasswordRoute
   '/produtos/$id': typeof ProdutosIdRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
   '/produtos': typeof ProdutosRouteWithChildren
+  '/reset-password': typeof ResetPasswordRoute
   '/produtos/$id': typeof ProdutosIdRoute
 }
 export interface FileRoutesById {
@@ -52,24 +60,39 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
   '/produtos': typeof ProdutosRouteWithChildren
+  '/reset-password': typeof ResetPasswordRoute
   '/produtos/$id': typeof ProdutosIdRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/auth' | '/produtos' | '/produtos/$id'
+  fullPaths: '/' | '/auth' | '/produtos' | '/reset-password' | '/produtos/$id'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/auth' | '/produtos' | '/produtos/$id'
-  id: '__root__' | '/' | '/auth' | '/produtos' | '/produtos/$id'
+  to: '/' | '/auth' | '/produtos' | '/reset-password' | '/produtos/$id'
+  id:
+    | '__root__'
+    | '/'
+    | '/auth'
+    | '/produtos'
+    | '/reset-password'
+    | '/produtos/$id'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AuthRoute: typeof AuthRoute
   ProdutosRoute: typeof ProdutosRouteWithChildren
+  ResetPasswordRoute: typeof ResetPasswordRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/reset-password': {
+      id: '/reset-password'
+      path: '/reset-password'
+      fullPath: '/reset-password'
+      preLoaderRoute: typeof ResetPasswordRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/produtos': {
       id: '/produtos'
       path: '/produtos'
@@ -117,6 +140,7 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AuthRoute: AuthRoute,
   ProdutosRoute: ProdutosRouteWithChildren,
+  ResetPasswordRoute: ResetPasswordRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
