@@ -1,0 +1,124 @@
+import { createFileRoute, Link, notFound } from "@tanstack/react-router";
+import { queryOptions, useSuspenseQuery } from "@tanstack/react-query";
+import { getProduct } from "@/lib/products.functions";
+import { formatBRL, whatsappLink } from "@/lib/shop";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { ArrowLeft, ImageOff, MessageCircle } from "lucide-react";
+
+const productQuery = (id: string) =>
+  queryOptions({
+    queryKey: ["product", id],
+    queryFn: () => getProduct({ data: { id } }),
+  });
+
+export const Route = createFileRoute("/produtos/$id")({
+  head: ({ loaderData }) => ({
+    meta: [
+      { title: loaderData ? `${loaderData.nome} — Mimando` : "Produto — Mimando" },
+      {
+        name: "description",
+        content: loaderData?.descricao_curta || "Detalhes do produto na Mimando Papelaria.",
+      },
+      { property: "og:title", content: loaderData?.nome ?? "Produto" },
+      { property: "og:description", content: loaderData?.descricao_curta ?? "" },
+      ...(loaderData?.imagem_url ? [{ property: "og:image", content: loaderData.imagem_url }] : []),
+    ],
+  }),
+  loader: async ({ context, params }) => {
+    const data = await context.queryClient.ensureQueryData(productQuery(params.id));
+    if (!data) throw notFound();
+    return data;
+  },
+  component: ProductDetail,
+  errorComponent: ({ error }) => (
+    <div className="container mx-auto px-4 py-16 text-center text-destructive">
+      {error.message}
+    </div>
+  ),
+  notFoundComponent: () => (
+    <div className="container mx-auto px-4 py-16 text-center">
+      <h1 className="text-2xl font-semibold">Produto não encontrado</h1>
+      <Button asChild className="mt-6 rounded-full" variant="outline">
+        <Link to="/produtos">Voltar ao catálogo</Link>
+      </Button>
+    </div>
+  ),
+});
+
+function ProductDetail() {
+  const { id } = Route.useParams();
+  const { data: p } = useSuspenseQuery(productQuery(id));
+  if (!p) return null;
+
+  return (
+    <div className="container mx-auto max-w-5xl px-4 py-10">
+      <Link
+        to="/produtos"
+        className="mb-6 inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-primary"
+      >
+        <ArrowLeft className="h-4 w-4" /> Voltar ao catálogo
+      </Link>
+
+      <div className="grid gap-8 md:grid-cols-2">
+        <div className="overflow-hidden rounded-3xl bg-card shadow-card">
+          <div className="aspect-square">
+            {p.imagem_url ? (
+              <img src={p.imagem_url} alt={p.nome} className="h-full w-full object-cover" />
+            ) : (
+              <div className="grid h-full place-items-center text-muted-foreground">
+                <ImageOff className="h-16 w-16" />
+              </div>
+            )}
+          </div>
+        </div>
+
+        <div className="flex flex-col">
+          <Badge variant="secondary" className="w-fit rounded-full">
+            {p.categoria}
+          </Badge>
+          <h1 className="mt-3 text-3xl font-bold sm:text-4xl">{p.nome}</h1>
+          <p className="mt-2 text-3xl font-bold text-primary">{formatBRL(p.preco)}</p>
+
+          <div className="mt-3">
+            {p.disponivel ? (
+              <Badge className="rounded-full bg-green-100 text-green-800 hover:bg-green-100">
+                Disponível
+              </Badge>
+            ) : (
+              <Badge variant="outline" className="rounded-full">
+                Indisponível no momento
+              </Badge>
+            )}
+          </div>
+
+          {p.descricao_curta && (
+            <p className="mt-5 text-muted-foreground">{p.descricao_curta}</p>
+          )}
+
+          {p.descricao_completa && (
+            <div className="mt-6 rounded-2xl bg-card/70 p-5 shadow-card">
+              <h2 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">
+                Descrição
+              </h2>
+              <p className="mt-2 whitespace-pre-line text-sm">{p.descricao_completa}</p>
+            </div>
+          )}
+
+          <Button
+            asChild
+            size="lg"
+            className="mt-8 w-full rounded-full gradient-primary text-primary-foreground shadow-soft hover:opacity-90"
+          >
+            <a href={whatsappLink(p.nome)} target="_blank" rel="noopener noreferrer">
+              <MessageCircle className="mr-2 h-5 w-5" /> Tenho interesse pelo WhatsApp
+            </a>
+          </Button>
+          <p className="mt-2 text-center text-xs text-muted-foreground">
+            Você será direcionada para uma conversa pronta com a loja.
+          </p>
+        </div>
+      </div>
+    </div>
+  );
+}
