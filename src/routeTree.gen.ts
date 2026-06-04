@@ -17,13 +17,13 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as ProdutosIdRouteImport } from './routes/produtos.$id'
 import { Route as AuthenticatedMeusPedidosRouteImport } from './routes/_authenticated/meus-pedidos'
 import { Route as AuthenticatedContaRouteImport } from './routes/_authenticated/conta'
-import { Route as AuthenticatedCheckoutRouteImport } from './routes/_authenticated/checkout'
 import { Route as AuthenticatedCarrinhoRouteImport } from './routes/_authenticated/carrinho'
 import { Route as AuthenticatedAdminRouteRouteImport } from './routes/_authenticated/admin/route'
+import { Route as AuthenticatedCheckoutIndexRouteImport } from './routes/_authenticated/checkout/index'
 import { Route as AuthenticatedAdminIndexRouteImport } from './routes/_authenticated/admin/index'
-import { Route as AuthenticatedCheckoutSucessoRouteImport } from './routes/_authenticated/checkout.sucesso'
-import { Route as AuthenticatedCheckoutPendenteRouteImport } from './routes/_authenticated/checkout.pendente'
-import { Route as AuthenticatedCheckoutFalhaRouteImport } from './routes/_authenticated/checkout.falha'
+import { Route as AuthenticatedCheckoutSucessoRouteImport } from './routes/_authenticated/checkout/sucesso'
+import { Route as AuthenticatedCheckoutPendenteRouteImport } from './routes/_authenticated/checkout/pendente'
+import { Route as AuthenticatedCheckoutFalhaRouteImport } from './routes/_authenticated/checkout/falha'
 import { Route as AuthenticatedAdminPedidosRouteImport } from './routes/_authenticated/admin/pedidos'
 import { Route as AuthenticatedAdminNovoRouteImport } from './routes/_authenticated/admin/novo'
 import { Route as AuthenticatedAdminIdRouteImport } from './routes/_authenticated/admin/$id'
@@ -69,11 +69,6 @@ const AuthenticatedContaRoute = AuthenticatedContaRouteImport.update({
   path: '/conta',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
-const AuthenticatedCheckoutRoute = AuthenticatedCheckoutRouteImport.update({
-  id: '/checkout',
-  path: '/checkout',
-  getParentRoute: () => AuthenticatedRouteRoute,
-} as any)
 const AuthenticatedCarrinhoRoute = AuthenticatedCarrinhoRouteImport.update({
   id: '/carrinho',
   path: '/carrinho',
@@ -84,6 +79,12 @@ const AuthenticatedAdminRouteRoute = AuthenticatedAdminRouteRouteImport.update({
   path: '/admin',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedCheckoutIndexRoute =
+  AuthenticatedCheckoutIndexRouteImport.update({
+    id: '/checkout/',
+    path: '/checkout/',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedAdminIndexRoute = AuthenticatedAdminIndexRouteImport.update({
   id: '/',
   path: '/',
@@ -91,21 +92,21 @@ const AuthenticatedAdminIndexRoute = AuthenticatedAdminIndexRouteImport.update({
 } as any)
 const AuthenticatedCheckoutSucessoRoute =
   AuthenticatedCheckoutSucessoRouteImport.update({
-    id: '/sucesso',
-    path: '/sucesso',
-    getParentRoute: () => AuthenticatedCheckoutRoute,
+    id: '/checkout/sucesso',
+    path: '/checkout/sucesso',
+    getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
 const AuthenticatedCheckoutPendenteRoute =
   AuthenticatedCheckoutPendenteRouteImport.update({
-    id: '/pendente',
-    path: '/pendente',
-    getParentRoute: () => AuthenticatedCheckoutRoute,
+    id: '/checkout/pendente',
+    path: '/checkout/pendente',
+    getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
 const AuthenticatedCheckoutFalhaRoute =
   AuthenticatedCheckoutFalhaRouteImport.update({
-    id: '/falha',
-    path: '/falha',
-    getParentRoute: () => AuthenticatedCheckoutRoute,
+    id: '/checkout/falha',
+    path: '/checkout/falha',
+    getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
 const AuthenticatedAdminPedidosRoute =
   AuthenticatedAdminPedidosRouteImport.update({
@@ -137,7 +138,6 @@ export interface FileRoutesByFullPath {
   '/reset-password': typeof ResetPasswordRoute
   '/admin': typeof AuthenticatedAdminRouteRouteWithChildren
   '/carrinho': typeof AuthenticatedCarrinhoRoute
-  '/checkout': typeof AuthenticatedCheckoutRouteWithChildren
   '/conta': typeof AuthenticatedContaRoute
   '/meus-pedidos': typeof AuthenticatedMeusPedidosRoute
   '/produtos/$id': typeof ProdutosIdRoute
@@ -148,6 +148,7 @@ export interface FileRoutesByFullPath {
   '/checkout/pendente': typeof AuthenticatedCheckoutPendenteRoute
   '/checkout/sucesso': typeof AuthenticatedCheckoutSucessoRoute
   '/admin/': typeof AuthenticatedAdminIndexRoute
+  '/checkout/': typeof AuthenticatedCheckoutIndexRoute
   '/api/public/mercado-pago/webhook': typeof ApiPublicMercadoPagoWebhookRoute
 }
 export interface FileRoutesByTo {
@@ -156,7 +157,6 @@ export interface FileRoutesByTo {
   '/produtos': typeof ProdutosRouteWithChildren
   '/reset-password': typeof ResetPasswordRoute
   '/carrinho': typeof AuthenticatedCarrinhoRoute
-  '/checkout': typeof AuthenticatedCheckoutRouteWithChildren
   '/conta': typeof AuthenticatedContaRoute
   '/meus-pedidos': typeof AuthenticatedMeusPedidosRoute
   '/produtos/$id': typeof ProdutosIdRoute
@@ -167,6 +167,7 @@ export interface FileRoutesByTo {
   '/checkout/pendente': typeof AuthenticatedCheckoutPendenteRoute
   '/checkout/sucesso': typeof AuthenticatedCheckoutSucessoRoute
   '/admin': typeof AuthenticatedAdminIndexRoute
+  '/checkout': typeof AuthenticatedCheckoutIndexRoute
   '/api/public/mercado-pago/webhook': typeof ApiPublicMercadoPagoWebhookRoute
 }
 export interface FileRoutesById {
@@ -178,7 +179,6 @@ export interface FileRoutesById {
   '/reset-password': typeof ResetPasswordRoute
   '/_authenticated/admin': typeof AuthenticatedAdminRouteRouteWithChildren
   '/_authenticated/carrinho': typeof AuthenticatedCarrinhoRoute
-  '/_authenticated/checkout': typeof AuthenticatedCheckoutRouteWithChildren
   '/_authenticated/conta': typeof AuthenticatedContaRoute
   '/_authenticated/meus-pedidos': typeof AuthenticatedMeusPedidosRoute
   '/produtos/$id': typeof ProdutosIdRoute
@@ -189,6 +189,7 @@ export interface FileRoutesById {
   '/_authenticated/checkout/pendente': typeof AuthenticatedCheckoutPendenteRoute
   '/_authenticated/checkout/sucesso': typeof AuthenticatedCheckoutSucessoRoute
   '/_authenticated/admin/': typeof AuthenticatedAdminIndexRoute
+  '/_authenticated/checkout/': typeof AuthenticatedCheckoutIndexRoute
   '/api/public/mercado-pago/webhook': typeof ApiPublicMercadoPagoWebhookRoute
 }
 export interface FileRouteTypes {
@@ -200,7 +201,6 @@ export interface FileRouteTypes {
     | '/reset-password'
     | '/admin'
     | '/carrinho'
-    | '/checkout'
     | '/conta'
     | '/meus-pedidos'
     | '/produtos/$id'
@@ -211,6 +211,7 @@ export interface FileRouteTypes {
     | '/checkout/pendente'
     | '/checkout/sucesso'
     | '/admin/'
+    | '/checkout/'
     | '/api/public/mercado-pago/webhook'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -219,7 +220,6 @@ export interface FileRouteTypes {
     | '/produtos'
     | '/reset-password'
     | '/carrinho'
-    | '/checkout'
     | '/conta'
     | '/meus-pedidos'
     | '/produtos/$id'
@@ -230,6 +230,7 @@ export interface FileRouteTypes {
     | '/checkout/pendente'
     | '/checkout/sucesso'
     | '/admin'
+    | '/checkout'
     | '/api/public/mercado-pago/webhook'
   id:
     | '__root__'
@@ -240,7 +241,6 @@ export interface FileRouteTypes {
     | '/reset-password'
     | '/_authenticated/admin'
     | '/_authenticated/carrinho'
-    | '/_authenticated/checkout'
     | '/_authenticated/conta'
     | '/_authenticated/meus-pedidos'
     | '/produtos/$id'
@@ -251,6 +251,7 @@ export interface FileRouteTypes {
     | '/_authenticated/checkout/pendente'
     | '/_authenticated/checkout/sucesso'
     | '/_authenticated/admin/'
+    | '/_authenticated/checkout/'
     | '/api/public/mercado-pago/webhook'
   fileRoutesById: FileRoutesById
 }
@@ -321,13 +322,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedContaRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
-    '/_authenticated/checkout': {
-      id: '/_authenticated/checkout'
-      path: '/checkout'
-      fullPath: '/checkout'
-      preLoaderRoute: typeof AuthenticatedCheckoutRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
     '/_authenticated/carrinho': {
       id: '/_authenticated/carrinho'
       path: '/carrinho'
@@ -342,6 +336,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAdminRouteRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/checkout/': {
+      id: '/_authenticated/checkout/'
+      path: '/checkout'
+      fullPath: '/checkout/'
+      preLoaderRoute: typeof AuthenticatedCheckoutIndexRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/admin/': {
       id: '/_authenticated/admin/'
       path: '/'
@@ -351,24 +352,24 @@ declare module '@tanstack/react-router' {
     }
     '/_authenticated/checkout/sucesso': {
       id: '/_authenticated/checkout/sucesso'
-      path: '/sucesso'
+      path: '/checkout/sucesso'
       fullPath: '/checkout/sucesso'
       preLoaderRoute: typeof AuthenticatedCheckoutSucessoRouteImport
-      parentRoute: typeof AuthenticatedCheckoutRoute
+      parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/checkout/pendente': {
       id: '/_authenticated/checkout/pendente'
-      path: '/pendente'
+      path: '/checkout/pendente'
       fullPath: '/checkout/pendente'
       preLoaderRoute: typeof AuthenticatedCheckoutPendenteRouteImport
-      parentRoute: typeof AuthenticatedCheckoutRoute
+      parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/checkout/falha': {
       id: '/_authenticated/checkout/falha'
-      path: '/falha'
+      path: '/checkout/falha'
       fullPath: '/checkout/falha'
       preLoaderRoute: typeof AuthenticatedCheckoutFalhaRouteImport
-      parentRoute: typeof AuthenticatedCheckoutRoute
+      parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/admin/pedidos': {
       id: '/_authenticated/admin/pedidos'
@@ -421,37 +422,26 @@ const AuthenticatedAdminRouteRouteWithChildren =
     AuthenticatedAdminRouteRouteChildren,
   )
 
-interface AuthenticatedCheckoutRouteChildren {
-  AuthenticatedCheckoutFalhaRoute: typeof AuthenticatedCheckoutFalhaRoute
-  AuthenticatedCheckoutPendenteRoute: typeof AuthenticatedCheckoutPendenteRoute
-  AuthenticatedCheckoutSucessoRoute: typeof AuthenticatedCheckoutSucessoRoute
-}
-
-const AuthenticatedCheckoutRouteChildren: AuthenticatedCheckoutRouteChildren = {
-  AuthenticatedCheckoutFalhaRoute: AuthenticatedCheckoutFalhaRoute,
-  AuthenticatedCheckoutPendenteRoute: AuthenticatedCheckoutPendenteRoute,
-  AuthenticatedCheckoutSucessoRoute: AuthenticatedCheckoutSucessoRoute,
-}
-
-const AuthenticatedCheckoutRouteWithChildren =
-  AuthenticatedCheckoutRoute._addFileChildren(
-    AuthenticatedCheckoutRouteChildren,
-  )
-
 interface AuthenticatedRouteRouteChildren {
   AuthenticatedAdminRouteRoute: typeof AuthenticatedAdminRouteRouteWithChildren
   AuthenticatedCarrinhoRoute: typeof AuthenticatedCarrinhoRoute
-  AuthenticatedCheckoutRoute: typeof AuthenticatedCheckoutRouteWithChildren
   AuthenticatedContaRoute: typeof AuthenticatedContaRoute
   AuthenticatedMeusPedidosRoute: typeof AuthenticatedMeusPedidosRoute
+  AuthenticatedCheckoutFalhaRoute: typeof AuthenticatedCheckoutFalhaRoute
+  AuthenticatedCheckoutPendenteRoute: typeof AuthenticatedCheckoutPendenteRoute
+  AuthenticatedCheckoutSucessoRoute: typeof AuthenticatedCheckoutSucessoRoute
+  AuthenticatedCheckoutIndexRoute: typeof AuthenticatedCheckoutIndexRoute
 }
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedAdminRouteRoute: AuthenticatedAdminRouteRouteWithChildren,
   AuthenticatedCarrinhoRoute: AuthenticatedCarrinhoRoute,
-  AuthenticatedCheckoutRoute: AuthenticatedCheckoutRouteWithChildren,
   AuthenticatedContaRoute: AuthenticatedContaRoute,
   AuthenticatedMeusPedidosRoute: AuthenticatedMeusPedidosRoute,
+  AuthenticatedCheckoutFalhaRoute: AuthenticatedCheckoutFalhaRoute,
+  AuthenticatedCheckoutPendenteRoute: AuthenticatedCheckoutPendenteRoute,
+  AuthenticatedCheckoutSucessoRoute: AuthenticatedCheckoutSucessoRoute,
+  AuthenticatedCheckoutIndexRoute: AuthenticatedCheckoutIndexRoute,
 }
 
 const AuthenticatedRouteRouteWithChildren =
@@ -480,3 +470,13 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
+import type { getRouter } from './router.tsx'
+import type { startInstance } from './start.ts'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+    config: Awaited<ReturnType<typeof startInstance.getOptions>>
+  }
+}
