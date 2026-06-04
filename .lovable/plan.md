@@ -1,79 +1,83 @@
-# MVP — Mimando Papelaria Fofa e Presentes Criativos
 
-Loja virtual single-tenant (uma única dona/admin), em rosa/roxo/lilás/branco, responsiva, com catálogo público e painel admin protegido. Sem checkout: interesse vai por WhatsApp para **+55 11 98439-9180**.
+# Sprint 2 — Dois caminhos de compra (WhatsApp + Mercado Pago)
 
-## Stack e backend
-- TanStack Start + Tailwind v4 (tokens em `src/styles.css`).
-- Lovable Cloud (Supabase) ativado para auth, banco e RLS.
-- Admin única: `lucianaap.costa82@gmail.com` (papel `admin` em `user_roles`).
-- Imagens de produto: **URL da imagem** (campo de texto, sem storage).
+Mantém o modelo de **loja única** (só `lucianaap.costa82@gmail.com` cadastra produtos). Adiciono carrinho, checkout com endereço, pedidos, área "Meus pedidos", aba "Pedidos" no admin e toda a estrutura de Mercado Pago Checkout Pro — o botão "Pagar" fica desabilitado até você adicionar `MERCADO_PAGO_ACCESS_TOKEN` e `MERCADO_PAGO_PUBLIC_KEY`.
 
-## Design system (em `src/styles.css`)
-- Tokens semânticos em `oklch`: rosa principal, lilás, roxo suave, branco/off-white, foreground escuro suave.
-- Cards arredondados (`--radius` ~1rem), sombras suaves, gradiente rosa→lilás para hero e CTA.
-- Fontes modernas (Quicksand/Poppins via Google Fonts).
-- Componentes shadcn já presentes (Button, Card, Input, Dialog, Select, Form, Sonner, etc.).
+## O que muda para o cliente
 
-## Rotas (file-based em `src/routes/`)
-Públicas:
-- `index.tsx` — Home: hero com nome, frase “Presentes criativos, fofos e especiais para mimar quem você ama.”, CTA para catálogo, seção “Nossa proposta”, destaque “Atendemos principalmente o Sudeste 🇧🇷 (SP, RJ, MG, ES e região)”.
-- `produtos.tsx` — Catálogo com filtro por categoria (chips). Cards: imagem, nome, preço, categoria, descrição curta, botão “Ver detalhes”. Estado vazio: “Nenhum produto cadastrado ainda. A loja está preparando novidades fofas para você.”
-- `produtos.$id.tsx` — Detalhes: imagem grande, nome, preço, categoria, descrição completa, badge disponibilidade, botão “Tenho interesse” → `https://wa.me/5511984399180?text=Olá, tenho interesse no produto [nome].`
-- `auth.tsx` — Login + Cadastro (tabs) com e-mail/senha; link “Esqueci minha senha”.
-- `reset-password.tsx` — Define nova senha após link de recuperação.
+- Na página do produto, dois botões claros:
+  - **Comprar pelo WhatsApp** (já existe, mantém a mensagem pronta)
+  - **Adicionar ao carrinho**
+- **Carrinho** (`/carrinho`): lista de itens, alterar quantidade, remover, subtotal e total.
+- **Checkout** (`/checkout`, exige login): resumo do pedido + formulário de endereço (nome, telefone, CEP, rua, número, complemento, bairro, cidade, UF) + botão **Finalizar pagamento** que cria o pedido como `pending` e redireciona ao Mercado Pago.
+- **Meus pedidos** (`/meus-pedidos`): lista só dos pedidos do cliente logado, com número, itens, total, status e data.
+- Páginas de retorno `/checkout/sucesso`, `/checkout/pendente`, `/checkout/falha` (callbacks do MP).
 
-Protegidas (sob `_authenticated/`, layout client-rendered gerenciado pela integração):
-- `_authenticated/conta.tsx` — Página simples do cliente (nome, e-mail, logout).
-- `_authenticated/admin.tsx` — Layout admin (gate extra: exige role `admin`, senão redireciona para `/`).
-- `_authenticated/admin/index.tsx` — Dashboard: lista de produtos, botão “Adicionar produto”, ações editar/excluir, toggle disponibilidade.
-- `_authenticated/admin/novo.tsx` — Formulário criar produto.
-- `_authenticated/admin/$id.tsx` — Formulário editar produto.
+## O que muda para a administradora
 
-Header responsivo (logo, links Home/Produtos/Conta, botão Entrar/Sair, link Admin só se for admin). Menu mobile com Sheet.
+- Nova aba **Pedidos** no painel (`/admin/pedidos`): todos os pedidos, com cliente, e-mail, itens, total, status, método, data e endereço de entrega.
+- CRUD de produtos continua igual.
 
-## Banco de dados (migration Supabase)
-- Enum `app_role`: `admin`, `cliente`.
-- `profiles` (id uuid PK = auth.users.id, nome text, email text, created_at). Trigger `on_auth_user_created` cria profile automático.
-- `user_roles` (id, user_id FK auth.users, role app_role, unique(user_id, role)). Função SECURITY DEFINER `has_role(uuid, app_role)`.
-- `products` (id uuid, nome, preco numeric(10,2), categoria text, descricao_curta, descricao_completa, imagem_url, disponivel boolean default true, created_at, updated_at). Trigger `updated_at`.
-- Enum/constraint de categoria aceitando: Canecas, Garrafas, Camisas, Laços de cabelo, Papelaria, Presentes criativos, Personalizados, Outros.
-- GRANTs explícitos a `anon` (SELECT em products) e `authenticated`/`service_role`.
-- RLS:
-  - `products`: SELECT público (anon + authenticated); INSERT/UPDATE/DELETE só `has_role(auth.uid(),'admin')`.
-  - `profiles`: SELECT/UPDATE só dono; admin pode SELECT tudo.
-  - `user_roles`: SELECT do próprio usuário; nenhuma escrita via API (gerenciada por seed/admin).
-- Seed: insere role `admin` para o usuário com email `lucianaap.costa82@gmail.com` (executado idempotente; se ainda não existir em auth.users, cria registro em tabela `admin_emails` e o trigger de signup atribui role ao criar conta com esse email).
+## Banco de dados (uma migration)
 
-## Server functions (`src/lib/*.functions.ts`)
-- `products.functions.ts`: `listProducts({categoria?})`, `getProduct(id)` (públicos via `supabaseAdmin` com projeção segura, chamados pelos loaders).
-- `admin-products.functions.ts`: `createProduct`, `updateProduct`, `deleteProduct`, `toggleDisponivel` — todos com `requireSupabaseAuth` + checagem `has_role`.
-- `me.functions.ts`: `getMyRole()` para o header decidir mostrar link Admin.
+Tabelas novas no schema `public`:
+- **orders**: `id`, `user_id` (FK auth.users), `customer_name`, `customer_email`, `customer_phone`, endereço (`address_cep`, `address_street`, `address_number`, `address_complement`, `address_district`, `address_city`, `address_state`), `total_price`, `payment_status` (enum: `pending`/`paid`/`canceled`/`failed`), `payment_method`, `mercado_pago_preference_id`, `mercado_pago_payment_id`, `created_at`, `updated_at`.
+- **order_items**: `id`, `order_id` (FK), `product_id` (FK products, ON DELETE SET NULL), `product_name`, `product_price`, `quantity`, `subtotal`, `created_at`.
 
-Loaders públicos usam `queryOptions` + `ensureQueryData` + `useSuspenseQuery`. Cada rota tem `errorComponent` e `notFoundComponent`.
+RLS:
+- `orders`: SELECT do próprio cliente OR `has_role(auth.uid(),'admin')`. INSERT pelo próprio cliente. UPDATE só `service_role` (webhook) e admin.
+- `order_items`: SELECT/INSERT condicionado a `orders.user_id = auth.uid()` OR admin.
+- GRANTs para `authenticated` e `service_role`, conforme padrão do projeto.
 
-## Auth (browser)
-- `signUp` com `emailRedirectTo: window.location.origin`.
-- `signInWithPassword`, `signOut`.
-- `resetPasswordForEmail(email, { redirectTo: origin + '/reset-password' })`.
-- Listener `onAuthStateChange` no `__root.tsx` invalida router + queries.
-- Validação com Zod (email, senha mín. 8).
+## Mercado Pago — estrutura pronta, sem secrets ainda
 
-## Painel admin
-- Tabela responsiva (Table no desktop, cards no mobile) com: imagem mini, nome, categoria, preço, status, ações.
-- Form (criar/editar) com campos: nome, preço (number), categoria (Select), descrição curta (Input), descrição completa (Textarea), URL da imagem (Input com preview), disponível (Switch). Validação Zod, toasts via Sonner.
+- Instalo `mercadopago` (SDK oficial Node).
+- **Server route** `src/routes/api/mercado-pago/create-preference.ts` (POST, autenticado): valida carrinho com Zod, recalcula preços do banco (nunca confia no cliente), cria `orders` + `order_items` com status `pending`, cria a preferência no MP, salva `mercado_pago_preference_id` e retorna `init_point`.
+- **Server route público** `src/routes/api/public/mercado-pago/webhook.ts` (POST): recebe notificações, consulta o pagamento pelo SDK, atualiza `payment_status` e `mercado_pago_payment_id` via `supabaseAdmin`.
+- Ambas leem `process.env.MERCADO_PAGO_ACCESS_TOKEN`. Se ausente, `create-preference` retorna 503 com mensagem amigável e o botão "Finalizar pagamento" mostra aviso "Pagamento online ainda não configurado pela loja".
+- URL do webhook a configurar no painel MP: `https://project--a2335e50-388d-4d71-9317-3eb4bab5cd68.lovable.app/api/public/mercado-pago/webhook`.
 
-## SEO e meta
-- `head()` por rota: title, description, og:title, og:description distintos.
-- H1 único por página, alt em imagens, viewport responsivo.
+## Carrinho (frontend)
 
-## Detalhes técnicos
-- Categoria como string com lista constante em `src/lib/categories.ts` (reaproveitada no filtro e no form).
-- Formatação de preço em pt-BR (`Intl.NumberFormat('pt-BR',{style:'currency',currency:'BRL'})`).
-- WhatsApp link constante `WHATSAPP_NUMBER = '5511984399180'`.
-- Sem `useEffect` para fetch inicial — sempre loader + Query.
-- Sem dados fictícios persistidos; estado vazio amigável.
+- Contexto `CartProvider` em `src/lib/cart.tsx`, persistido em `localStorage` (chave `mimando-cart`). Itens: `{ productId, nome, preco, imagem_url, quantity }`.
+- Hook `useCart()` com `addItem`, `removeItem`, `updateQuantity`, `clear`, `total`, `count`.
+- Badge com contador no `Header`.
 
-## Itens fora de escopo deste sprint
-- Carrinho/checkout, pagamento, frete.
-- Upload de arquivo de imagem (fica como evolução futura).
-- Múltiplas imagens por produto, variações, estoque.
+## Rotas a criar/ajustar
+
+Públicas: já existem `/`, `/produtos`, `/produtos/$id`, `/auth`, `/reset-password`.
+Cliente logado (sob `_authenticated/`):
+- `carrinho.tsx`, `checkout.tsx`, `meus-pedidos.tsx`, e `checkout.sucesso.tsx` / `.pendente.tsx` / `.falha.tsx`.
+- Mantém `conta.tsx`.
+Admin (sob `_authenticated/admin/`):
+- Novo `pedidos.tsx` (lista) e `pedidos.$id.tsx` (detalhe).
+API:
+- `api/mercado-pago/create-preference.ts`
+- `api/public/mercado-pago/webhook.ts`
+
+Observação: o spec pede `/login`, `/cadastro`, `/carrinho`, `/meus-pedidos`. Vou manter `/auth` (já feito) e usar `/meus-pedidos`, `/carrinho`, `/checkout` em português — alinhado ao restante.
+
+## Server functions
+
+`src/lib/orders.functions.ts`:
+- `listMyOrders()` — cliente logado, lista seus pedidos + itens.
+- `getMyOrder(id)` — detalhe do próprio pedido.
+- `adminListOrders()` — exige `has_role admin`.
+- `adminGetOrder(id)` — exige admin.
+
+## Segurança
+
+- Nada de dados de cartão no banco (Checkout Pro hospeda o formulário).
+- Preços do pedido recalculados no servidor a partir de `products` (cliente não consegue forjar valor).
+- Webhook usa `supabaseAdmin` apenas após consultar o pagamento no MP via SDK (não confia no payload bruto).
+- RLS bloqueia cliente A de ver pedido de cliente B.
+
+## O que NÃO entra (mantém a regra anti-marketplace)
+
+- Sem múltiplos vendedores, sem "minha loja", sem painel de vendedor, sem comissão.
+- Sem cálculo de frete (endereço só para entrega manual).
+- Sem cupons, sem variações de produto, sem estoque.
+
+## Próximo passo depois deste sprint
+
+Quando você criar a conta no Mercado Pago, te peço para colar `MERCADO_PAGO_ACCESS_TOKEN` e `MERCADO_PAGO_PUBLIC_KEY` (sandbox ou produção) via formulário seguro. Aí o checkout passa a funcionar de verdade automaticamente, sem mexer no código.
