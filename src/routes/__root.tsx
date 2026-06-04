@@ -14,6 +14,7 @@ import { reportLovableError } from "../lib/lovable-error-reporting";
 import { Header } from "@/components/Header";
 import { Toaster } from "@/components/ui/sonner";
 import { supabase } from "@/integrations/supabase/client";
+import { CartProvider } from "@/lib/cart";
 
 function NotFoundComponent() {
   return (
@@ -146,17 +147,19 @@ function RootComponent() {
   const { queryClient } = Route.useRouteContext();
   return (
     <QueryClientProvider client={queryClient}>
-      <AuthSync />
-      <div className="flex min-h-screen flex-col">
-        <Header />
-        <main className="flex-1">
-          <Outlet />
-        </main>
-        <footer className="border-t border-border/60 py-6 text-center text-sm text-muted-foreground">
-          © {new Date().getFullYear()} Mimando Papelaria Fofa e Presentes Criativos
-        </footer>
-      </div>
-      <Toaster />
+      <CartProvider>
+        <AuthSync />
+        <div className="flex min-h-screen flex-col">
+          <Header />
+          <main className="flex-1">
+            <Outlet />
+          </main>
+          <footer className="border-t border-border/60 py-6 text-center text-sm text-muted-foreground">
+            © {new Date().getFullYear()} Mimando Papelaria Fofa e Presentes Criativos
+          </footer>
+        </div>
+        <Toaster />
+      </CartProvider>
     </QueryClientProvider>
   );
 }
