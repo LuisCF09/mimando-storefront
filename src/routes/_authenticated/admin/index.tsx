@@ -11,7 +11,7 @@ import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
 import { formatBRL } from "@/lib/shop";
-import { Plus, Pencil, Trash2, ImageOff } from "lucide-react";
+import { Plus, Pencil, Trash2, ImageOff, Package } from "lucide-react";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -69,12 +69,23 @@ function AdminDashboard() {
           <h1 className="text-3xl font-bold">Painel da loja</h1>
           <p className="text-muted-foreground">Gerencie seus produtos com carinho ♡</p>
         </div>
-        <Button
-          onClick={() => router.navigate({ to: "/admin/novo" })}
-          className="rounded-full gradient-primary text-primary-foreground shadow-soft"
-        >
-          <Plus className="mr-2 h-4 w-4" /> Adicionar produto
-        </Button>
+        <div className="flex flex-wrap gap-2">
+          <Button
+            asChild
+            variant="outline"
+            className="rounded-full"
+          >
+            <Link to="/admin/pedidos">
+              <Package className="mr-2 h-4 w-4" /> Ver pedidos
+            </Link>
+          </Button>
+          <Button
+            onClick={() => router.navigate({ to: "/admin/novo" })}
+            className="rounded-full gradient-primary text-primary-foreground shadow-soft"
+          >
+            <Plus className="mr-2 h-4 w-4" /> Adicionar produto
+          </Button>
+        </div>
       </div>
 
       {isLoading ? (

@@ -26,6 +26,120 @@ export type Database = {
         }
         Relationships: []
       }
+      order_items: {
+        Row: {
+          created_at: string
+          id: string
+          order_id: string
+          product_id: string | null
+          product_name: string
+          product_price: number
+          quantity: number
+          subtotal: number
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          order_id: string
+          product_id?: string | null
+          product_name: string
+          product_price: number
+          quantity: number
+          subtotal: number
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          order_id?: string
+          product_id?: string | null
+          product_name?: string
+          product_price?: number
+          quantity?: number
+          subtotal?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "order_items_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "orders"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "order_items_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      orders: {
+        Row: {
+          address_cep: string
+          address_city: string
+          address_complement: string
+          address_district: string
+          address_number: string
+          address_state: string
+          address_street: string
+          created_at: string
+          customer_email: string
+          customer_name: string
+          customer_phone: string
+          id: string
+          mercado_pago_payment_id: string | null
+          mercado_pago_preference_id: string | null
+          payment_method: string
+          payment_status: Database["public"]["Enums"]["payment_status"]
+          total_price: number
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          address_cep: string
+          address_city: string
+          address_complement?: string
+          address_district: string
+          address_number: string
+          address_state: string
+          address_street: string
+          created_at?: string
+          customer_email: string
+          customer_name: string
+          customer_phone: string
+          id?: string
+          mercado_pago_payment_id?: string | null
+          mercado_pago_preference_id?: string | null
+          payment_method?: string
+          payment_status?: Database["public"]["Enums"]["payment_status"]
+          total_price: number
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          address_cep?: string
+          address_city?: string
+          address_complement?: string
+          address_district?: string
+          address_number?: string
+          address_state?: string
+          address_street?: string
+          created_at?: string
+          customer_email?: string
+          customer_name?: string
+          customer_phone?: string
+          id?: string
+          mercado_pago_payment_id?: string | null
+          mercado_pago_preference_id?: string | null
+          payment_method?: string
+          payment_status?: Database["public"]["Enums"]["payment_status"]
+          total_price?: number
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       products: {
         Row: {
           categoria: string
@@ -122,6 +236,7 @@ export type Database = {
     }
     Enums: {
       app_role: "admin" | "cliente"
+      payment_status: "pending" | "paid" | "canceled" | "failed"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -250,6 +365,7 @@ export const Constants = {
   public: {
     Enums: {
       app_role: ["admin", "cliente"],
+      payment_status: ["pending", "paid", "canceled", "failed"],
     },
   },
 } as const

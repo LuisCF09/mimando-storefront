@@ -15,11 +15,19 @@ import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as ProdutosIdRouteImport } from './routes/produtos.$id'
+import { Route as AuthenticatedMeusPedidosRouteImport } from './routes/_authenticated/meus-pedidos'
 import { Route as AuthenticatedContaRouteImport } from './routes/_authenticated/conta'
+import { Route as AuthenticatedCarrinhoRouteImport } from './routes/_authenticated/carrinho'
 import { Route as AuthenticatedAdminRouteRouteImport } from './routes/_authenticated/admin/route'
+import { Route as AuthenticatedCheckoutIndexRouteImport } from './routes/_authenticated/checkout/index'
 import { Route as AuthenticatedAdminIndexRouteImport } from './routes/_authenticated/admin/index'
+import { Route as AuthenticatedCheckoutSucessoRouteImport } from './routes/_authenticated/checkout/sucesso'
+import { Route as AuthenticatedCheckoutPendenteRouteImport } from './routes/_authenticated/checkout/pendente'
+import { Route as AuthenticatedCheckoutFalhaRouteImport } from './routes/_authenticated/checkout/falha'
+import { Route as AuthenticatedAdminPedidosRouteImport } from './routes/_authenticated/admin/pedidos'
 import { Route as AuthenticatedAdminNovoRouteImport } from './routes/_authenticated/admin/novo'
 import { Route as AuthenticatedAdminIdRouteImport } from './routes/_authenticated/admin/$id'
+import { Route as ApiPublicMercadoPagoWebhookRouteImport } from './routes/api/public/mercado-pago/webhook'
 
 const ResetPasswordRoute = ResetPasswordRouteImport.update({
   id: '/reset-password',
@@ -50,9 +58,20 @@ const ProdutosIdRoute = ProdutosIdRouteImport.update({
   path: '/$id',
   getParentRoute: () => ProdutosRoute,
 } as any)
+const AuthenticatedMeusPedidosRoute =
+  AuthenticatedMeusPedidosRouteImport.update({
+    id: '/meus-pedidos',
+    path: '/meus-pedidos',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedContaRoute = AuthenticatedContaRouteImport.update({
   id: '/conta',
   path: '/conta',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedCarrinhoRoute = AuthenticatedCarrinhoRouteImport.update({
+  id: '/carrinho',
+  path: '/carrinho',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
 const AuthenticatedAdminRouteRoute = AuthenticatedAdminRouteRouteImport.update({
@@ -60,11 +79,41 @@ const AuthenticatedAdminRouteRoute = AuthenticatedAdminRouteRouteImport.update({
   path: '/admin',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedCheckoutIndexRoute =
+  AuthenticatedCheckoutIndexRouteImport.update({
+    id: '/checkout/',
+    path: '/checkout/',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedAdminIndexRoute = AuthenticatedAdminIndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => AuthenticatedAdminRouteRoute,
 } as any)
+const AuthenticatedCheckoutSucessoRoute =
+  AuthenticatedCheckoutSucessoRouteImport.update({
+    id: '/checkout/sucesso',
+    path: '/checkout/sucesso',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedCheckoutPendenteRoute =
+  AuthenticatedCheckoutPendenteRouteImport.update({
+    id: '/checkout/pendente',
+    path: '/checkout/pendente',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedCheckoutFalhaRoute =
+  AuthenticatedCheckoutFalhaRouteImport.update({
+    id: '/checkout/falha',
+    path: '/checkout/falha',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedAdminPedidosRoute =
+  AuthenticatedAdminPedidosRouteImport.update({
+    id: '/pedidos',
+    path: '/pedidos',
+    getParentRoute: () => AuthenticatedAdminRouteRoute,
+  } as any)
 const AuthenticatedAdminNovoRoute = AuthenticatedAdminNovoRouteImport.update({
   id: '/novo',
   path: '/novo',
@@ -75,6 +124,12 @@ const AuthenticatedAdminIdRoute = AuthenticatedAdminIdRouteImport.update({
   path: '/$id',
   getParentRoute: () => AuthenticatedAdminRouteRoute,
 } as any)
+const ApiPublicMercadoPagoWebhookRoute =
+  ApiPublicMercadoPagoWebhookRouteImport.update({
+    id: '/api/public/mercado-pago/webhook',
+    path: '/api/public/mercado-pago/webhook',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -82,22 +137,38 @@ export interface FileRoutesByFullPath {
   '/produtos': typeof ProdutosRouteWithChildren
   '/reset-password': typeof ResetPasswordRoute
   '/admin': typeof AuthenticatedAdminRouteRouteWithChildren
+  '/carrinho': typeof AuthenticatedCarrinhoRoute
   '/conta': typeof AuthenticatedContaRoute
+  '/meus-pedidos': typeof AuthenticatedMeusPedidosRoute
   '/produtos/$id': typeof ProdutosIdRoute
   '/admin/$id': typeof AuthenticatedAdminIdRoute
   '/admin/novo': typeof AuthenticatedAdminNovoRoute
+  '/admin/pedidos': typeof AuthenticatedAdminPedidosRoute
+  '/checkout/falha': typeof AuthenticatedCheckoutFalhaRoute
+  '/checkout/pendente': typeof AuthenticatedCheckoutPendenteRoute
+  '/checkout/sucesso': typeof AuthenticatedCheckoutSucessoRoute
   '/admin/': typeof AuthenticatedAdminIndexRoute
+  '/checkout/': typeof AuthenticatedCheckoutIndexRoute
+  '/api/public/mercado-pago/webhook': typeof ApiPublicMercadoPagoWebhookRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
   '/produtos': typeof ProdutosRouteWithChildren
   '/reset-password': typeof ResetPasswordRoute
+  '/carrinho': typeof AuthenticatedCarrinhoRoute
   '/conta': typeof AuthenticatedContaRoute
+  '/meus-pedidos': typeof AuthenticatedMeusPedidosRoute
   '/produtos/$id': typeof ProdutosIdRoute
   '/admin/$id': typeof AuthenticatedAdminIdRoute
   '/admin/novo': typeof AuthenticatedAdminNovoRoute
+  '/admin/pedidos': typeof AuthenticatedAdminPedidosRoute
+  '/checkout/falha': typeof AuthenticatedCheckoutFalhaRoute
+  '/checkout/pendente': typeof AuthenticatedCheckoutPendenteRoute
+  '/checkout/sucesso': typeof AuthenticatedCheckoutSucessoRoute
   '/admin': typeof AuthenticatedAdminIndexRoute
+  '/checkout': typeof AuthenticatedCheckoutIndexRoute
+  '/api/public/mercado-pago/webhook': typeof ApiPublicMercadoPagoWebhookRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -107,11 +178,19 @@ export interface FileRoutesById {
   '/produtos': typeof ProdutosRouteWithChildren
   '/reset-password': typeof ResetPasswordRoute
   '/_authenticated/admin': typeof AuthenticatedAdminRouteRouteWithChildren
+  '/_authenticated/carrinho': typeof AuthenticatedCarrinhoRoute
   '/_authenticated/conta': typeof AuthenticatedContaRoute
+  '/_authenticated/meus-pedidos': typeof AuthenticatedMeusPedidosRoute
   '/produtos/$id': typeof ProdutosIdRoute
   '/_authenticated/admin/$id': typeof AuthenticatedAdminIdRoute
   '/_authenticated/admin/novo': typeof AuthenticatedAdminNovoRoute
+  '/_authenticated/admin/pedidos': typeof AuthenticatedAdminPedidosRoute
+  '/_authenticated/checkout/falha': typeof AuthenticatedCheckoutFalhaRoute
+  '/_authenticated/checkout/pendente': typeof AuthenticatedCheckoutPendenteRoute
+  '/_authenticated/checkout/sucesso': typeof AuthenticatedCheckoutSucessoRoute
   '/_authenticated/admin/': typeof AuthenticatedAdminIndexRoute
+  '/_authenticated/checkout/': typeof AuthenticatedCheckoutIndexRoute
+  '/api/public/mercado-pago/webhook': typeof ApiPublicMercadoPagoWebhookRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -121,22 +200,38 @@ export interface FileRouteTypes {
     | '/produtos'
     | '/reset-password'
     | '/admin'
+    | '/carrinho'
     | '/conta'
+    | '/meus-pedidos'
     | '/produtos/$id'
     | '/admin/$id'
     | '/admin/novo'
+    | '/admin/pedidos'
+    | '/checkout/falha'
+    | '/checkout/pendente'
+    | '/checkout/sucesso'
     | '/admin/'
+    | '/checkout/'
+    | '/api/public/mercado-pago/webhook'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
     | '/auth'
     | '/produtos'
     | '/reset-password'
+    | '/carrinho'
     | '/conta'
+    | '/meus-pedidos'
     | '/produtos/$id'
     | '/admin/$id'
     | '/admin/novo'
+    | '/admin/pedidos'
+    | '/checkout/falha'
+    | '/checkout/pendente'
+    | '/checkout/sucesso'
     | '/admin'
+    | '/checkout'
+    | '/api/public/mercado-pago/webhook'
   id:
     | '__root__'
     | '/'
@@ -145,11 +240,19 @@ export interface FileRouteTypes {
     | '/produtos'
     | '/reset-password'
     | '/_authenticated/admin'
+    | '/_authenticated/carrinho'
     | '/_authenticated/conta'
+    | '/_authenticated/meus-pedidos'
     | '/produtos/$id'
     | '/_authenticated/admin/$id'
     | '/_authenticated/admin/novo'
+    | '/_authenticated/admin/pedidos'
+    | '/_authenticated/checkout/falha'
+    | '/_authenticated/checkout/pendente'
+    | '/_authenticated/checkout/sucesso'
     | '/_authenticated/admin/'
+    | '/_authenticated/checkout/'
+    | '/api/public/mercado-pago/webhook'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -158,6 +261,7 @@ export interface RootRouteChildren {
   AuthRoute: typeof AuthRoute
   ProdutosRoute: typeof ProdutosRouteWithChildren
   ResetPasswordRoute: typeof ResetPasswordRoute
+  ApiPublicMercadoPagoWebhookRoute: typeof ApiPublicMercadoPagoWebhookRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -204,11 +308,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ProdutosIdRouteImport
       parentRoute: typeof ProdutosRoute
     }
+    '/_authenticated/meus-pedidos': {
+      id: '/_authenticated/meus-pedidos'
+      path: '/meus-pedidos'
+      fullPath: '/meus-pedidos'
+      preLoaderRoute: typeof AuthenticatedMeusPedidosRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/conta': {
       id: '/_authenticated/conta'
       path: '/conta'
       fullPath: '/conta'
       preLoaderRoute: typeof AuthenticatedContaRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/carrinho': {
+      id: '/_authenticated/carrinho'
+      path: '/carrinho'
+      fullPath: '/carrinho'
+      preLoaderRoute: typeof AuthenticatedCarrinhoRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/admin': {
@@ -218,11 +336,46 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAdminRouteRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/checkout/': {
+      id: '/_authenticated/checkout/'
+      path: '/checkout'
+      fullPath: '/checkout/'
+      preLoaderRoute: typeof AuthenticatedCheckoutIndexRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/admin/': {
       id: '/_authenticated/admin/'
       path: '/'
       fullPath: '/admin/'
       preLoaderRoute: typeof AuthenticatedAdminIndexRouteImport
+      parentRoute: typeof AuthenticatedAdminRouteRoute
+    }
+    '/_authenticated/checkout/sucesso': {
+      id: '/_authenticated/checkout/sucesso'
+      path: '/checkout/sucesso'
+      fullPath: '/checkout/sucesso'
+      preLoaderRoute: typeof AuthenticatedCheckoutSucessoRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/checkout/pendente': {
+      id: '/_authenticated/checkout/pendente'
+      path: '/checkout/pendente'
+      fullPath: '/checkout/pendente'
+      preLoaderRoute: typeof AuthenticatedCheckoutPendenteRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/checkout/falha': {
+      id: '/_authenticated/checkout/falha'
+      path: '/checkout/falha'
+      fullPath: '/checkout/falha'
+      preLoaderRoute: typeof AuthenticatedCheckoutFalhaRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/admin/pedidos': {
+      id: '/_authenticated/admin/pedidos'
+      path: '/pedidos'
+      fullPath: '/admin/pedidos'
+      preLoaderRoute: typeof AuthenticatedAdminPedidosRouteImport
       parentRoute: typeof AuthenticatedAdminRouteRoute
     }
     '/_authenticated/admin/novo': {
@@ -239,12 +392,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAdminIdRouteImport
       parentRoute: typeof AuthenticatedAdminRouteRoute
     }
+    '/api/public/mercado-pago/webhook': {
+      id: '/api/public/mercado-pago/webhook'
+      path: '/api/public/mercado-pago/webhook'
+      fullPath: '/api/public/mercado-pago/webhook'
+      preLoaderRoute: typeof ApiPublicMercadoPagoWebhookRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
 interface AuthenticatedAdminRouteRouteChildren {
   AuthenticatedAdminIdRoute: typeof AuthenticatedAdminIdRoute
   AuthenticatedAdminNovoRoute: typeof AuthenticatedAdminNovoRoute
+  AuthenticatedAdminPedidosRoute: typeof AuthenticatedAdminPedidosRoute
   AuthenticatedAdminIndexRoute: typeof AuthenticatedAdminIndexRoute
 }
 
@@ -252,6 +413,7 @@ const AuthenticatedAdminRouteRouteChildren: AuthenticatedAdminRouteRouteChildren
   {
     AuthenticatedAdminIdRoute: AuthenticatedAdminIdRoute,
     AuthenticatedAdminNovoRoute: AuthenticatedAdminNovoRoute,
+    AuthenticatedAdminPedidosRoute: AuthenticatedAdminPedidosRoute,
     AuthenticatedAdminIndexRoute: AuthenticatedAdminIndexRoute,
   }
 
@@ -262,12 +424,24 @@ const AuthenticatedAdminRouteRouteWithChildren =
 
 interface AuthenticatedRouteRouteChildren {
   AuthenticatedAdminRouteRoute: typeof AuthenticatedAdminRouteRouteWithChildren
+  AuthenticatedCarrinhoRoute: typeof AuthenticatedCarrinhoRoute
   AuthenticatedContaRoute: typeof AuthenticatedContaRoute
+  AuthenticatedMeusPedidosRoute: typeof AuthenticatedMeusPedidosRoute
+  AuthenticatedCheckoutFalhaRoute: typeof AuthenticatedCheckoutFalhaRoute
+  AuthenticatedCheckoutPendenteRoute: typeof AuthenticatedCheckoutPendenteRoute
+  AuthenticatedCheckoutSucessoRoute: typeof AuthenticatedCheckoutSucessoRoute
+  AuthenticatedCheckoutIndexRoute: typeof AuthenticatedCheckoutIndexRoute
 }
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedAdminRouteRoute: AuthenticatedAdminRouteRouteWithChildren,
+  AuthenticatedCarrinhoRoute: AuthenticatedCarrinhoRoute,
   AuthenticatedContaRoute: AuthenticatedContaRoute,
+  AuthenticatedMeusPedidosRoute: AuthenticatedMeusPedidosRoute,
+  AuthenticatedCheckoutFalhaRoute: AuthenticatedCheckoutFalhaRoute,
+  AuthenticatedCheckoutPendenteRoute: AuthenticatedCheckoutPendenteRoute,
+  AuthenticatedCheckoutSucessoRoute: AuthenticatedCheckoutSucessoRoute,
+  AuthenticatedCheckoutIndexRoute: AuthenticatedCheckoutIndexRoute,
 }
 
 const AuthenticatedRouteRouteWithChildren =
@@ -291,6 +465,7 @@ const rootRouteChildren: RootRouteChildren = {
   AuthRoute: AuthRoute,
   ProdutosRoute: ProdutosRouteWithChildren,
   ResetPasswordRoute: ResetPasswordRoute,
+  ApiPublicMercadoPagoWebhookRoute: ApiPublicMercadoPagoWebhookRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
