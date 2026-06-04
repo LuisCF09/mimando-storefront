@@ -4,7 +4,9 @@ import { getProduct } from "@/lib/products.functions";
 import { formatBRL, whatsappLink } from "@/lib/shop";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { ArrowLeft, ImageOff, MessageCircle } from "lucide-react";
+import { ArrowLeft, ImageOff, MessageCircle, ShoppingCart } from "lucide-react";
+import { useCart } from "@/lib/cart";
+import { toast } from "sonner";
 
 const productQuery = (id: string) =>
   queryOptions({
@@ -52,6 +54,7 @@ export const Route = createFileRoute("/produtos/$id")({
 function ProductDetail() {
   const { id } = Route.useParams();
   const { data: p } = useSuspenseQuery(productQuery(id));
+  const { addItem } = useCart();
   if (!p) return null;
 
   return (
@@ -108,17 +111,31 @@ function ProductDetail() {
             </div>
           )}
 
-          <Button
-            asChild
-            size="lg"
-            className="mt-8 w-full rounded-full gradient-primary text-primary-foreground shadow-soft hover:opacity-90"
-          >
-            <a href={whatsappLink(p.nome)} target="_blank" rel="noopener noreferrer">
-              <MessageCircle className="mr-2 h-5 w-5" /> Tenho interesse pelo WhatsApp
-            </a>
-          </Button>
+          <div className="mt-8 flex flex-col gap-3">
+            <Button
+              size="lg"
+              disabled={!p.disponivel}
+              className="w-full rounded-full gradient-primary text-primary-foreground shadow-soft hover:opacity-90"
+              onClick={() => {
+                addItem({ productId: p.id, nome: p.nome, preco: p.preco, imagem_url: p.imagem_url });
+                toast.success("Adicionado ao carrinho ♡", { description: p.nome });
+              }}
+            >
+              <ShoppingCart className="mr-2 h-5 w-5" /> Adicionar ao carrinho
+            </Button>
+            <Button
+              asChild
+              size="lg"
+              variant="outline"
+              className="w-full rounded-full"
+            >
+              <a href={whatsappLink(p.nome)} target="_blank" rel="noopener noreferrer">
+                <MessageCircle className="mr-2 h-5 w-5" /> Comprar pelo WhatsApp
+              </a>
+            </Button>
+          </div>
           <p className="mt-2 text-center text-xs text-muted-foreground">
-            Você será direcionada para uma conversa pronta com a loja.
+            Pague online pelo site (Mercado Pago) ou combine direto com a vendedora pelo WhatsApp.
           </p>
         </div>
       </div>
