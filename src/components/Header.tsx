@@ -80,6 +80,7 @@ export function Header() {
     enabled: !!userId,
   });
   const isAdmin = !!roleData?.isAdmin;
+  const { count } = useCart();
 
   const handleLogout = async () => {
     await supabase.auth.signOut();
