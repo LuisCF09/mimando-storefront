@@ -12,7 +12,7 @@ import { toast } from "sonner";
 import { Loader2, ShoppingBag } from "lucide-react";
 import { z } from "zod";
 
-export const Route = createFileRoute("/_authenticated/checkout")({
+export const Route = createFileRoute("/_authenticated/checkout/")({
   head: () => ({ meta: [{ title: "Checkout — Mimando" }] }),
   component: CheckoutPage,
 });
