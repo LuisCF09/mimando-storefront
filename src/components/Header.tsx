@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { Link } from "@tanstack/react-router";
-import { Menu, Heart, ShoppingBag, LogOut, User as UserIcon, Sparkles } from "lucide-react";
+import { Menu, Heart, ShoppingBag, ShoppingCart, LogOut, User as UserIcon, Sparkles, Package } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   Sheet,
@@ -13,6 +13,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { getMyRole } from "@/lib/admin-products.functions";
+import { useCart } from "@/lib/cart";
 
 function useSession() {
   const [userId, setUserId] = useState<string | null>(null);
