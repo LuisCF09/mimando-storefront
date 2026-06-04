@@ -103,8 +103,23 @@ export function Header() {
         </nav>
 
         <div className="hidden items-center gap-2 md:flex">
+          <Button asChild variant="ghost" size="icon" className="relative rounded-full" aria-label="Carrinho">
+            <Link to="/carrinho">
+              <ShoppingCart className="h-5 w-5" />
+              {count > 0 && (
+                <span className="absolute -right-1 -top-1 grid h-5 min-w-5 place-items-center rounded-full bg-primary px-1 text-[10px] font-bold text-primary-foreground">
+                  {count}
+                </span>
+              )}
+            </Link>
+          </Button>
           {userId ? (
             <>
+              <Button asChild variant="ghost" size="sm" className="rounded-full">
+                <Link to="/meus-pedidos">
+                  <Package className="mr-1 h-4 w-4" /> Pedidos
+                </Link>
+              </Button>
               <Button asChild variant="ghost" size="sm" className="rounded-full">
                 <Link to="/conta">
                   <UserIcon className="mr-1 h-4 w-4" /> Conta
@@ -123,6 +138,20 @@ export function Header() {
           )}
         </div>
 
+        <div className="flex items-center gap-1 md:hidden">
+          <Button asChild variant="ghost" size="icon" className="relative rounded-full" aria-label="Carrinho">
+            <Link to="/carrinho">
+              <ShoppingCart className="h-5 w-5" />
+              {count > 0 && (
+                <span className="absolute -right-1 -top-1 grid h-5 min-w-5 place-items-center rounded-full bg-primary px-1 text-[10px] font-bold text-primary-foreground">
+                  {count}
+                </span>
+              )}
+            </Link>
+          </Button>
+        </div>
+
+
         <Sheet open={open} onOpenChange={setOpen}>
           <SheetTrigger asChild className="md:hidden">
             <Button variant="ghost" size="icon" aria-label="Menu">
@@ -138,6 +167,11 @@ export function Header() {
               <div className="mt-2 border-t pt-4">
                 {userId ? (
                   <div className="flex flex-col gap-2">
+                    <Button asChild variant="outline" className="rounded-full">
+                      <Link to="/meus-pedidos" onClick={() => setOpen(false)}>
+                        <Package className="mr-1 h-4 w-4" /> Meus pedidos
+                      </Link>
+                    </Button>
                     <Button asChild variant="outline" className="rounded-full">
                       <Link to="/conta" onClick={() => setOpen(false)}>
                         <UserIcon className="mr-1 h-4 w-4" /> Minha conta
