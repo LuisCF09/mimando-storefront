@@ -39,8 +39,12 @@ export const Route = createFileRoute("/produtos")({
 function ProductsPage() {
   const { data: products } = useSuspenseQuery(productsQuery);
   const [filter, setFilter] = useState<string | null>(null);
+  const [searchQuery, setSearchQuery] = useState<string>("");
 
-  const filtered = filter ? products.filter((p) => p.categoria === filter) : products;
+  const query = searchQuery.trim().toLowerCase();
+  const filtered = products
+    .filter((p) => (filter ? p.categoria === filter : true))
+    .filter((p) => (query ? p.nome.toLowerCase().includes(query) : true));
 
   return (
     <div className="container mx-auto px-4 py-10">
@@ -49,6 +53,20 @@ function ProductsPage() {
         <p className="mt-2 text-muted-foreground">
           Escolha o seu favorito e fale com a gente pelo WhatsApp.
         </p>
+      </div>
+
+      <div className="mx-auto mb-6 max-w-md">
+        <div className="relative">
+          <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+          <Input
+            type="text"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            placeholder="Buscar produtos..."
+            aria-label="Buscar produtos por nome"
+            className="rounded-full pl-9"
+          />
+        </div>
       </div>
 
       <div className="mb-8 flex flex-wrap justify-center gap-2">
@@ -63,7 +81,7 @@ function ProductsPage() {
       </div>
 
       {filtered.length === 0 ? (
-        <EmptyState all={products.length === 0} />
+        <EmptyState all={products.length === 0} hasSearch={query.length > 0} />
       ) : (
         <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
           {filtered.map((p) => (
