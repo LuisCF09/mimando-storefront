@@ -259,9 +259,28 @@ function SignupForm() {
         />
         <p className="mt-1 text-xs text-muted-foreground">Mínimo 8 caracteres.</p>
       </div>
+      <div className="flex items-start gap-2">
+        <Checkbox
+          id="su-consent"
+          checked={consent}
+          onCheckedChange={(v) => setConsent(v === true)}
+          className="mt-0.5"
+        />
+        <Label htmlFor="su-consent" className="text-xs leading-relaxed font-normal">
+          Li e aceito a{" "}
+          <Link to="/privacidade" target="_blank" className="text-primary underline">
+            Política de Privacidade
+          </Link>{" "}
+          e os{" "}
+          <Link to="/termos" target="_blank" className="text-primary underline">
+            Termos de Uso
+          </Link>
+          .
+        </Label>
+      </div>
       <Button
         type="submit"
-        disabled={loading}
+        disabled={loading || !consent}
         className="w-full rounded-full gradient-primary text-primary-foreground"
       >
         {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
