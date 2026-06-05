@@ -155,7 +155,15 @@ function RootComponent() {
             <Outlet />
           </main>
           <footer className="border-t border-border/60 py-6 text-center text-sm text-muted-foreground">
-            © {new Date().getFullYear()} Mimando Papelaria Fofa e Presentes Criativos
+            <div>© {new Date().getFullYear()} Mimando Papelaria Fofa e Presentes Criativos</div>
+            <div className="mt-2 flex justify-center gap-4">
+              <Link to="/privacidade" className="hover:text-primary hover:underline">
+                Política de Privacidade
+              </Link>
+              <Link to="/termos" className="hover:text-primary hover:underline">
+                Termos de Uso
+              </Link>
+            </div>
           </footer>
         </div>
         <Toaster />
