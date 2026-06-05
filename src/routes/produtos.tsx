@@ -6,7 +6,8 @@ import { CATEGORIES, formatBRL } from "@/lib/shop";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { ImageOff, PackageOpen } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { ImageOff, PackageOpen, Search } from "lucide-react";
 
 const productsQuery = queryOptions({
   queryKey: ["products", "all"],

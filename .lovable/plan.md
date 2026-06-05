@@ -1,42 +1,22 @@
-## Objetivo
-Adicionar elementos básicos de conformidade com a LGPD sem alterar funcionalidades existentes da loja.
+## Busca por nome no catálogo de produtos
 
-## Alterações
+### O que será feito
+Adicionar uma barra de busca por nome na página `/produtos`, posicionada acima dos chips de categoria. A busca filtra os produtos em tempo real conforme o usuário digita, funcionando em conjunto com o filtro de categoria já existente.
 
-### 1. Páginas de conteúdo legal
-Criar duas novas rotas públicas com textos simples em português:
-- `/privacidade` → Política de Privacidade
-  - Explica que coletamos nome, e-mail e CEP para atendimento.
-  - Não compartilhamos dados sem autorização.
-  - O cliente pode pedir exclusão dos dados pelo WhatsApp.
-- `/termos` → Termos de Uso
-  - Texto breve e claro sobre uso do site.
+### Escopo
+- **Modificar**: `src/routes/produtos.tsx`
+- **Não modificar**: layout dos cards, chips de categoria, lógica de carregamento, estilos globais.
 
-Ambas terão metadados de SEO (`title`, `description`) e layout consistente com o resto do site.
+### Detalhes técnicos
+1. Adicionar estado `searchQuery` (`useState<string>(""`) no componente `ProductsPage`.
+2. Inserir um `<input type="text">` estilizado (usando tokens do design system, ex: `bg-secondary`, `border-border`, `rounded-full`) logo acima ou junto aos chips de categoria. Placeholder: "Buscar produtos..."
+3. A lógica de filtragem passa a combinar categoria + busca:
+   ```
+   filtered = products
+     .filter(p => !filter || p.categoria === filter)
+     .filter(p => !searchQuery || p.nome.toLowerCase().includes(searchQuery.toLowerCase()))
+   ```
+4. Atualizar o componente `EmptyState` para exibir mensagem adequada quando a busca por nome não retorna resultados (mesmo que a categoria esteja selecionada).
 
-### 2. Checkbox de consentimento no cadastro
-- No formulário de cadastro em `/auth` (`src/routes/auth.tsx`), adicionar um checkbox obrigatório.
-- Label: "Li e aceito a Política de Privacidade e os Termos de Uso" (com links para `/privacidade` e `/termos`).
-- Submissão do formulário será bloqueada se o checkbox não estiver marcado.
-- Sem alterar campos existentes (nome, e-mail, senha).
-
-### 3. Links no rodapé
-- No footer de `src/routes/__root.tsx`, adicionar links para `/privacidade` e `/termos` ao lado do texto de copyright.
-- Manter todo o restante do rodapé inalterado.
-
-## Arquivos a criar
-- `src/routes/privacidade.tsx`
-- `src/routes/termos.tsx`
-
-## Arquivos a editar
-- `src/routes/auth.tsx` (adicionar checkbox e validação)
-- `src/routes/__root.tsx` (adicionar links no footer)
-
-## O que NÃO será alterado
-- Nenhuma funcionalidade de login, carrinho, checkout, produtos, admin ou pedidos.
-- Nenhuma migration ou tabela de banco de dados.
-- Nenhum estilo global ou design token.
-
----
-
-Aprovar para seguir para implementação.
+### Resultado esperado
+O usuário digita o nome de um produto e a grade atualiza instantaneamente, mantendo o filtro de categoria ativo se houver um selecionado. Nenhuma outra página ou funcionalidade é alterada.
