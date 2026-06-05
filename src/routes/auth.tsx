@@ -5,6 +5,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Card } from "@/components/ui/card";
 import { toast } from "sonner";
@@ -186,11 +187,15 @@ function SignupForm() {
   const [nome, setNome] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [consent, setConsent] = useState(false);
   const [loading, setLoading] = useState(false);
   const [done, setDone] = useState(false);
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!consent) {
+      return toast.error("Você precisa aceitar a Política de Privacidade e os Termos de Uso.");
+    }
     const ep = emailSchema.safeParse(email);
     if (!ep.success) return toast.error(ep.error.issues[0].message);
     const pp = passSchema.safeParse(password);
@@ -255,9 +260,28 @@ function SignupForm() {
         />
         <p className="mt-1 text-xs text-muted-foreground">Mínimo 8 caracteres.</p>
       </div>
+      <div className="flex items-start gap-2">
+        <Checkbox
+          id="su-consent"
+          checked={consent}
+          onCheckedChange={(v) => setConsent(v === true)}
+          className="mt-0.5"
+        />
+        <Label htmlFor="su-consent" className="text-xs leading-relaxed font-normal">
+          Li e aceito a{" "}
+          <Link to="/privacidade" target="_blank" className="text-primary underline">
+            Política de Privacidade
+          </Link>{" "}
+          e os{" "}
+          <Link to="/termos" target="_blank" className="text-primary underline">
+            Termos de Uso
+          </Link>
+          .
+        </Label>
+      </div>
       <Button
         type="submit"
-        disabled={loading}
+        disabled={loading || !consent}
         className="w-full rounded-full gradient-primary text-primary-foreground"
       >
         {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
