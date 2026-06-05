@@ -186,11 +186,15 @@ function SignupForm() {
   const [nome, setNome] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [consent, setConsent] = useState(false);
   const [loading, setLoading] = useState(false);
   const [done, setDone] = useState(false);
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!consent) {
+      return toast.error("Você precisa aceitar a Política de Privacidade e os Termos de Uso.");
+    }
     const ep = emailSchema.safeParse(email);
     if (!ep.success) return toast.error(ep.error.issues[0].message);
     const pp = passSchema.safeParse(password);
