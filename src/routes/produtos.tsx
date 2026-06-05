@@ -166,19 +166,23 @@ function ProductCard({ p }: { p: Product }) {
   );
 }
 
-function EmptyState({ all }: { all: boolean }) {
+function EmptyState({ all, hasSearch = false }: { all: boolean; hasSearch?: boolean }) {
   return (
     <div className="mx-auto max-w-lg rounded-3xl bg-card/80 p-10 text-center shadow-card">
       <PackageOpen className="mx-auto h-10 w-10 text-primary" />
       <h2 className="mt-3 text-lg font-semibold">
         {all
           ? "Nenhum produto cadastrado ainda."
-          : "Nenhum produto encontrado nessa categoria."}
+          : hasSearch
+            ? "Nenhum produto encontrado para sua busca."
+            : "Nenhum produto encontrado nessa categoria."}
       </h2>
       <p className="mt-1 text-sm text-muted-foreground">
         {all
           ? "A loja está preparando novidades fofas para você. Volte em breve!"
-          : "Tente escolher outra categoria no filtro acima."}
+          : hasSearch
+            ? "Tente outro termo ou remova o filtro de categoria."
+            : "Tente escolher outra categoria no filtro acima."}
       </p>
     </div>
   );
