@@ -2,8 +2,8 @@ import { createFileRoute, Link, useRouter } from "@tanstack/react-router";
 import { useCart } from "@/lib/cart";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { formatBRL } from "@/lib/shop";
-import { Minus, Plus, Trash2, ShoppingBag, ImageOff } from "lucide-react";
+import { formatBRL, whatsappCartLink } from "@/lib/shop";
+import { Minus, Plus, Trash2, ShoppingBag, ImageOff, MessageCircle } from "lucide-react";
 
 export const Route = createFileRoute("/_authenticated/carrinho")({
   head: () => ({ meta: [{ title: "Carrinho — Mimando" }] }),
@@ -95,6 +95,21 @@ function CarrinhoPage() {
         >
           Finalizar compra
         </Button>
+        <Button asChild size="lg" variant="outline" className="mt-2 w-full rounded-full border-primary/40 text-primary hover:bg-primary/5">
+          <a
+            href={whatsappCartLink(
+              items.map((i) => ({ nome: i.nome, quantity: i.quantity, preco: i.preco })),
+              total,
+            )}
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            <MessageCircle className="mr-2 h-5 w-5" /> Finalizar pelo WhatsApp
+          </a>
+        </Button>
+        <p className="mt-2 text-center text-xs text-muted-foreground">
+          Pelo site você paga com cartão (Mercado Pago). Pelo WhatsApp você combina o Pix direto com a vendedora.
+        </p>
         <Button asChild variant="ghost" className="mt-2 w-full rounded-full">
           <Link to="/produtos">Continuar comprando</Link>
         </Button>

@@ -154,15 +154,38 @@ function RootComponent() {
           <main className="flex-1">
             <Outlet />
           </main>
-          <footer className="border-t border-border/60 py-6 text-center text-sm text-muted-foreground">
-            <div>© {new Date().getFullYear()} Mimando Papelaria Fofa e Presentes Criativos</div>
-            <div className="mt-2 flex justify-center gap-4">
+          <footer className="border-t border-border/60 py-8 text-center text-sm text-muted-foreground">
+            <div className="font-medium">
+              © 2026 Mimando Papelaria Fofa e Presentes Criativos
+            </div>
+            <div className="mt-3 flex flex-wrap justify-center gap-4">
+              <Link to="/contato" className="hover:text-primary hover:underline">
+                Contato
+              </Link>
               <Link to="/privacidade" className="hover:text-primary hover:underline">
                 Política de Privacidade
               </Link>
               <Link to="/termos" className="hover:text-primary hover:underline">
                 Termos de Uso
               </Link>
+            </div>
+            <div className="mt-3 flex justify-center gap-4 text-xs">
+              <a
+                href="https://wa.me/5511984399180"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="hover:text-primary hover:underline"
+              >
+                WhatsApp
+              </a>
+              <a
+                href="https://instagram.com/mimando.papelaria"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="hover:text-primary hover:underline"
+              >
+                Instagram
+              </a>
             </div>
           </footer>
         </div>

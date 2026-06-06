@@ -10,9 +10,12 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as TermosRouteImport } from './routes/termos'
+import { Route as SobreRouteImport } from './routes/sobre'
 import { Route as ResetPasswordRouteImport } from './routes/reset-password'
 import { Route as ProdutosRouteImport } from './routes/produtos'
 import { Route as PrivacidadeRouteImport } from './routes/privacidade'
+import { Route as ContatoRouteImport } from './routes/contato'
+import { Route as CategoriasRouteImport } from './routes/categorias'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as IndexRouteImport } from './routes/index'
@@ -36,6 +39,11 @@ const TermosRoute = TermosRouteImport.update({
   path: '/termos',
   getParentRoute: () => rootRouteImport,
 } as any)
+const SobreRoute = SobreRouteImport.update({
+  id: '/sobre',
+  path: '/sobre',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ResetPasswordRoute = ResetPasswordRouteImport.update({
   id: '/reset-password',
   path: '/reset-password',
@@ -49,6 +57,16 @@ const ProdutosRoute = ProdutosRouteImport.update({
 const PrivacidadeRoute = PrivacidadeRouteImport.update({
   id: '/privacidade',
   path: '/privacidade',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ContatoRoute = ContatoRouteImport.update({
+  id: '/contato',
+  path: '/contato',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const CategoriasRoute = CategoriasRouteImport.update({
+  id: '/categorias',
+  path: '/categorias',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AuthRoute = AuthRouteImport.update({
@@ -146,9 +164,12 @@ const ApiPublicMercadoPagoWebhookRoute =
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
+  '/categorias': typeof CategoriasRoute
+  '/contato': typeof ContatoRoute
   '/privacidade': typeof PrivacidadeRoute
   '/produtos': typeof ProdutosRouteWithChildren
   '/reset-password': typeof ResetPasswordRoute
+  '/sobre': typeof SobreRoute
   '/termos': typeof TermosRoute
   '/admin': typeof AuthenticatedAdminRouteRouteWithChildren
   '/carrinho': typeof AuthenticatedCarrinhoRoute
@@ -168,9 +189,12 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
+  '/categorias': typeof CategoriasRoute
+  '/contato': typeof ContatoRoute
   '/privacidade': typeof PrivacidadeRoute
   '/produtos': typeof ProdutosRouteWithChildren
   '/reset-password': typeof ResetPasswordRoute
+  '/sobre': typeof SobreRoute
   '/termos': typeof TermosRoute
   '/carrinho': typeof AuthenticatedCarrinhoRoute
   '/conta': typeof AuthenticatedContaRoute
@@ -191,9 +215,12 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/_authenticated': typeof AuthenticatedRouteRouteWithChildren
   '/auth': typeof AuthRoute
+  '/categorias': typeof CategoriasRoute
+  '/contato': typeof ContatoRoute
   '/privacidade': typeof PrivacidadeRoute
   '/produtos': typeof ProdutosRouteWithChildren
   '/reset-password': typeof ResetPasswordRoute
+  '/sobre': typeof SobreRoute
   '/termos': typeof TermosRoute
   '/_authenticated/admin': typeof AuthenticatedAdminRouteRouteWithChildren
   '/_authenticated/carrinho': typeof AuthenticatedCarrinhoRoute
@@ -215,9 +242,12 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/auth'
+    | '/categorias'
+    | '/contato'
     | '/privacidade'
     | '/produtos'
     | '/reset-password'
+    | '/sobre'
     | '/termos'
     | '/admin'
     | '/carrinho'
@@ -237,9 +267,12 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/auth'
+    | '/categorias'
+    | '/contato'
     | '/privacidade'
     | '/produtos'
     | '/reset-password'
+    | '/sobre'
     | '/termos'
     | '/carrinho'
     | '/conta'
@@ -259,9 +292,12 @@ export interface FileRouteTypes {
     | '/'
     | '/_authenticated'
     | '/auth'
+    | '/categorias'
+    | '/contato'
     | '/privacidade'
     | '/produtos'
     | '/reset-password'
+    | '/sobre'
     | '/termos'
     | '/_authenticated/admin'
     | '/_authenticated/carrinho'
@@ -283,9 +319,12 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AuthenticatedRouteRoute: typeof AuthenticatedRouteRouteWithChildren
   AuthRoute: typeof AuthRoute
+  CategoriasRoute: typeof CategoriasRoute
+  ContatoRoute: typeof ContatoRoute
   PrivacidadeRoute: typeof PrivacidadeRoute
   ProdutosRoute: typeof ProdutosRouteWithChildren
   ResetPasswordRoute: typeof ResetPasswordRoute
+  SobreRoute: typeof SobreRoute
   TermosRoute: typeof TermosRoute
   ApiPublicMercadoPagoWebhookRoute: typeof ApiPublicMercadoPagoWebhookRoute
 }
@@ -297,6 +336,13 @@ declare module '@tanstack/react-router' {
       path: '/termos'
       fullPath: '/termos'
       preLoaderRoute: typeof TermosRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/sobre': {
+      id: '/sobre'
+      path: '/sobre'
+      fullPath: '/sobre'
+      preLoaderRoute: typeof SobreRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/reset-password': {
@@ -318,6 +364,20 @@ declare module '@tanstack/react-router' {
       path: '/privacidade'
       fullPath: '/privacidade'
       preLoaderRoute: typeof PrivacidadeRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/contato': {
+      id: '/contato'
+      path: '/contato'
+      fullPath: '/contato'
+      preLoaderRoute: typeof ContatoRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/categorias': {
+      id: '/categorias'
+      path: '/categorias'
+      fullPath: '/categorias'
+      preLoaderRoute: typeof CategoriasRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/auth': {
@@ -503,22 +563,15 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
   AuthRoute: AuthRoute,
+  CategoriasRoute: CategoriasRoute,
+  ContatoRoute: ContatoRoute,
   PrivacidadeRoute: PrivacidadeRoute,
   ProdutosRoute: ProdutosRouteWithChildren,
   ResetPasswordRoute: ResetPasswordRoute,
+  SobreRoute: SobreRoute,
   TermosRoute: TermosRoute,
   ApiPublicMercadoPagoWebhookRoute: ApiPublicMercadoPagoWebhookRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}
