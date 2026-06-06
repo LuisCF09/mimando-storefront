@@ -2,12 +2,14 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { queryOptions, useSuspenseQuery } from "@tanstack/react-query";
 import { useState } from "react";
 import { listProducts, type Product } from "@/lib/products.functions";
-import { CATEGORIES, formatBRL } from "@/lib/shop";
+import { CATEGORIES, formatBRL, whatsappLink } from "@/lib/shop";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
-import { ImageOff, PackageOpen, Search } from "lucide-react";
+import { ImageOff, MessageCircle, PackageOpen, Search, ShoppingCart } from "lucide-react";
+import { useCart } from "@/lib/cart";
+import { toast } from "sonner";
 
 const productsQuery = queryOptions({
   queryKey: ["products", "all"],
@@ -36,22 +38,43 @@ export const Route = createFileRoute("/produtos")({
   notFoundComponent: () => <div>Página não encontrada.</div>,
 });
 
+type PriceRange = "all" | "lt30" | "30to60" | "gt60";
+type Availability = "all" | "available";
+
+const PRICE_LABELS: Record<PriceRange, string> = {
+  all: "Todos os preços",
+  lt30: "Até R$ 30",
+  "30to60": "R$ 30 a R$ 60",
+  gt60: "Acima de R$ 60",
+};
+
+function matchesPrice(p: number, r: PriceRange) {
+  if (r === "lt30") return p < 30;
+  if (r === "30to60") return p >= 30 && p <= 60;
+  if (r === "gt60") return p > 60;
+  return true;
+}
+
 function ProductsPage() {
   const { data: products } = useSuspenseQuery(productsQuery);
   const [filter, setFilter] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState<string>("");
+  const [price, setPrice] = useState<PriceRange>("all");
+  const [availability, setAvailability] = useState<Availability>("all");
 
   const query = searchQuery.trim().toLowerCase();
   const filtered = products
     .filter((p) => (filter ? p.categoria === filter : true))
-    .filter((p) => (query ? p.nome.toLowerCase().includes(query) : true));
+    .filter((p) => (query ? p.nome.toLowerCase().includes(query) : true))
+    .filter((p) => matchesPrice(Number(p.preco), price))
+    .filter((p) => (availability === "available" ? p.disponivel : true));
 
   return (
     <div className="container mx-auto px-4 py-10">
       <div className="mb-8 text-center">
         <h1 className="text-3xl font-bold sm:text-4xl">Nossos produtos</h1>
         <p className="mt-2 text-muted-foreground">
-          Escolha o seu favorito e fale com a gente pelo WhatsApp.
+          Escolha o seu favorito, compre pelo site ou chame no WhatsApp.
         </p>
       </div>
 
@@ -69,15 +92,39 @@ function ProductsPage() {
         </div>
       </div>
 
-      <div className="mb-8 flex flex-wrap justify-center gap-2">
-        <FilterChip active={filter === null} onClick={() => setFilter(null)}>
-          Todos
-        </FilterChip>
+      <div className="mb-4 flex flex-wrap justify-center gap-2">
+        <FilterChip active={filter === null} onClick={() => setFilter(null)}>Todos</FilterChip>
         {CATEGORIES.map((c) => (
           <FilterChip key={c} active={filter === c} onClick={() => setFilter(c)}>
             {c}
           </FilterChip>
         ))}
+      </div>
+
+      <div className="mb-8 flex flex-wrap items-center justify-center gap-2 text-sm">
+        <label className="flex items-center gap-2">
+          <span className="text-muted-foreground">Preço:</span>
+          <select
+            value={price}
+            onChange={(e) => setPrice(e.target.value as PriceRange)}
+            className="rounded-full border border-input bg-card px-3 py-1.5"
+          >
+            {(Object.keys(PRICE_LABELS) as PriceRange[]).map((k) => (
+              <option key={k} value={k}>{PRICE_LABELS[k]}</option>
+            ))}
+          </select>
+        </label>
+        <label className="flex items-center gap-2">
+          <span className="text-muted-foreground">Disponibilidade:</span>
+          <select
+            value={availability}
+            onChange={(e) => setAvailability(e.target.value as Availability)}
+            className="rounded-full border border-input bg-card px-3 py-1.5"
+          >
+            <option value="all">Todos</option>
+            <option value="available">Apenas disponíveis</option>
+          </select>
+        </label>
       </div>
 
       {filtered.length === 0 ? (
@@ -119,8 +166,9 @@ function FilterChip({
 }
 
 function ProductCard({ p }: { p: Product }) {
+  const { addItem } = useCart();
   return (
-    <Card className="group overflow-hidden rounded-3xl border-border/60 shadow-card transition hover:-translate-y-1 hover:shadow-soft">
+    <Card className="group flex flex-col overflow-hidden rounded-3xl border-border/60 shadow-card transition hover:-translate-y-1 hover:shadow-soft">
       <Link to="/produtos/$id" params={{ id: p.id }}>
         <div className="aspect-square overflow-hidden bg-secondary/50">
           {p.imagem_url ? (
@@ -137,15 +185,17 @@ function ProductCard({ p }: { p: Product }) {
           )}
         </div>
       </Link>
-      <CardContent className="space-y-2 p-4">
-        <Badge variant="secondary" className="rounded-full font-normal">
+      <CardContent className="flex flex-1 flex-col space-y-2 p-4">
+        <Badge variant="secondary" className="w-fit rounded-full font-normal">
           {p.categoria}
         </Badge>
-        <h3 className="line-clamp-1 font-semibold">{p.nome}</h3>
+        <Link to="/produtos/$id" params={{ id: p.id }} className="hover:text-primary">
+          <h3 className="line-clamp-1 font-semibold">{p.nome}</h3>
+        </Link>
         {p.descricao_curta && (
           <p className="line-clamp-2 text-sm text-muted-foreground">{p.descricao_curta}</p>
         )}
-        <div className="flex items-center justify-between pt-2">
+        <div className="flex items-center justify-between pt-1">
           <span className="text-lg font-bold text-primary">{formatBRL(p.preco)}</span>
           {!p.disponivel && (
             <Badge variant="outline" className="text-xs">
@@ -153,14 +203,26 @@ function ProductCard({ p }: { p: Product }) {
             </Badge>
           )}
         </div>
-        <Button
-          asChild
-          className="mt-2 w-full rounded-full gradient-primary text-primary-foreground shadow-soft hover:opacity-90"
-        >
-          <Link to="/produtos/$id" params={{ id: p.id }}>
-            Ver detalhes
-          </Link>
-        </Button>
+        <div className="mt-auto flex flex-col gap-2 pt-2">
+          <Button
+            disabled={!p.disponivel}
+            className="w-full rounded-full gradient-primary text-primary-foreground shadow-soft hover:opacity-90"
+            onClick={() => {
+              addItem({ productId: p.id, nome: p.nome, preco: Number(p.preco), imagem_url: p.imagem_url });
+              toast.success("Adicionado ao carrinho ♡", { description: p.nome });
+            }}
+          >
+            <ShoppingCart className="mr-2 h-4 w-4" /> Adicionar ao carrinho
+          </Button>
+          <Button asChild variant="outline" className="w-full rounded-full">
+            <a href={whatsappLink(p.nome)} target="_blank" rel="noopener noreferrer">
+              <MessageCircle className="mr-2 h-4 w-4" /> Comprar pelo WhatsApp
+            </a>
+          </Button>
+          <Button asChild variant="ghost" size="sm" className="w-full rounded-full text-xs">
+            <Link to="/produtos/$id" params={{ id: p.id }}>Ver detalhes</Link>
+          </Button>
+        </div>
       </CardContent>
     </Card>
   );
@@ -175,14 +237,14 @@ function EmptyState({ all, hasSearch = false }: { all: boolean; hasSearch?: bool
           ? "Nenhum produto cadastrado ainda."
           : hasSearch
             ? "Nenhum produto encontrado para sua busca."
-            : "Nenhum produto encontrado nessa categoria."}
+            : "Nenhum produto encontrado com esses filtros."}
       </h2>
       <p className="mt-1 text-sm text-muted-foreground">
         {all
           ? "A loja está preparando novidades fofas para você. Volte em breve!"
           : hasSearch
-            ? "Tente outro termo ou remova o filtro de categoria."
-            : "Tente escolher outra categoria no filtro acima."}
+            ? "Tente outro termo ou remova os filtros."
+            : "Tente ajustar os filtros acima."}
       </p>
     </div>
   );
