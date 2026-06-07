@@ -14,6 +14,7 @@ import { Route as SobreRouteImport } from './routes/sobre'
 import { Route as ResetPasswordRouteImport } from './routes/reset-password'
 import { Route as ProdutosRouteImport } from './routes/produtos'
 import { Route as PrivacidadeRouteImport } from './routes/privacidade'
+import { Route as PoliticasRouteImport } from './routes/politicas'
 import { Route as ContatoRouteImport } from './routes/contato'
 import { Route as CategoriasRouteImport } from './routes/categorias'
 import { Route as AuthRouteImport } from './routes/auth'
@@ -21,6 +22,7 @@ import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as ProdutosIdRouteImport } from './routes/produtos.$id'
 import { Route as AuthenticatedMeusPedidosRouteImport } from './routes/_authenticated/meus-pedidos'
+import { Route as AuthenticatedFavoritosRouteImport } from './routes/_authenticated/favoritos'
 import { Route as AuthenticatedContaRouteImport } from './routes/_authenticated/conta'
 import { Route as AuthenticatedCarrinhoRouteImport } from './routes/_authenticated/carrinho'
 import { Route as AuthenticatedAdminRouteRouteImport } from './routes/_authenticated/admin/route'
@@ -31,6 +33,7 @@ import { Route as AuthenticatedCheckoutPendenteRouteImport } from './routes/_aut
 import { Route as AuthenticatedCheckoutFalhaRouteImport } from './routes/_authenticated/checkout/falha'
 import { Route as AuthenticatedAdminPedidosRouteImport } from './routes/_authenticated/admin/pedidos'
 import { Route as AuthenticatedAdminNovoRouteImport } from './routes/_authenticated/admin/novo'
+import { Route as AuthenticatedAdminAvaliacoesRouteImport } from './routes/_authenticated/admin/avaliacoes'
 import { Route as AuthenticatedAdminIdRouteImport } from './routes/_authenticated/admin/$id'
 import { Route as ApiPublicMercadoPagoWebhookRouteImport } from './routes/api/public/mercado-pago/webhook'
 
@@ -57,6 +60,11 @@ const ProdutosRoute = ProdutosRouteImport.update({
 const PrivacidadeRoute = PrivacidadeRouteImport.update({
   id: '/privacidade',
   path: '/privacidade',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PoliticasRoute = PoliticasRouteImport.update({
+  id: '/politicas',
+  path: '/politicas',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ContatoRoute = ContatoRouteImport.update({
@@ -94,6 +102,11 @@ const AuthenticatedMeusPedidosRoute =
     path: '/meus-pedidos',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const AuthenticatedFavoritosRoute = AuthenticatedFavoritosRouteImport.update({
+  id: '/favoritos',
+  path: '/favoritos',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
 const AuthenticatedContaRoute = AuthenticatedContaRouteImport.update({
   id: '/conta',
   path: '/conta',
@@ -149,6 +162,12 @@ const AuthenticatedAdminNovoRoute = AuthenticatedAdminNovoRouteImport.update({
   path: '/novo',
   getParentRoute: () => AuthenticatedAdminRouteRoute,
 } as any)
+const AuthenticatedAdminAvaliacoesRoute =
+  AuthenticatedAdminAvaliacoesRouteImport.update({
+    id: '/avaliacoes',
+    path: '/avaliacoes',
+    getParentRoute: () => AuthenticatedAdminRouteRoute,
+  } as any)
 const AuthenticatedAdminIdRoute = AuthenticatedAdminIdRouteImport.update({
   id: '/$id',
   path: '/$id',
@@ -166,6 +185,7 @@ export interface FileRoutesByFullPath {
   '/auth': typeof AuthRoute
   '/categorias': typeof CategoriasRoute
   '/contato': typeof ContatoRoute
+  '/politicas': typeof PoliticasRoute
   '/privacidade': typeof PrivacidadeRoute
   '/produtos': typeof ProdutosRouteWithChildren
   '/reset-password': typeof ResetPasswordRoute
@@ -174,9 +194,11 @@ export interface FileRoutesByFullPath {
   '/admin': typeof AuthenticatedAdminRouteRouteWithChildren
   '/carrinho': typeof AuthenticatedCarrinhoRoute
   '/conta': typeof AuthenticatedContaRoute
+  '/favoritos': typeof AuthenticatedFavoritosRoute
   '/meus-pedidos': typeof AuthenticatedMeusPedidosRoute
   '/produtos/$id': typeof ProdutosIdRoute
   '/admin/$id': typeof AuthenticatedAdminIdRoute
+  '/admin/avaliacoes': typeof AuthenticatedAdminAvaliacoesRoute
   '/admin/novo': typeof AuthenticatedAdminNovoRoute
   '/admin/pedidos': typeof AuthenticatedAdminPedidosRoute
   '/checkout/falha': typeof AuthenticatedCheckoutFalhaRoute
@@ -191,6 +213,7 @@ export interface FileRoutesByTo {
   '/auth': typeof AuthRoute
   '/categorias': typeof CategoriasRoute
   '/contato': typeof ContatoRoute
+  '/politicas': typeof PoliticasRoute
   '/privacidade': typeof PrivacidadeRoute
   '/produtos': typeof ProdutosRouteWithChildren
   '/reset-password': typeof ResetPasswordRoute
@@ -198,9 +221,11 @@ export interface FileRoutesByTo {
   '/termos': typeof TermosRoute
   '/carrinho': typeof AuthenticatedCarrinhoRoute
   '/conta': typeof AuthenticatedContaRoute
+  '/favoritos': typeof AuthenticatedFavoritosRoute
   '/meus-pedidos': typeof AuthenticatedMeusPedidosRoute
   '/produtos/$id': typeof ProdutosIdRoute
   '/admin/$id': typeof AuthenticatedAdminIdRoute
+  '/admin/avaliacoes': typeof AuthenticatedAdminAvaliacoesRoute
   '/admin/novo': typeof AuthenticatedAdminNovoRoute
   '/admin/pedidos': typeof AuthenticatedAdminPedidosRoute
   '/checkout/falha': typeof AuthenticatedCheckoutFalhaRoute
@@ -217,6 +242,7 @@ export interface FileRoutesById {
   '/auth': typeof AuthRoute
   '/categorias': typeof CategoriasRoute
   '/contato': typeof ContatoRoute
+  '/politicas': typeof PoliticasRoute
   '/privacidade': typeof PrivacidadeRoute
   '/produtos': typeof ProdutosRouteWithChildren
   '/reset-password': typeof ResetPasswordRoute
@@ -225,9 +251,11 @@ export interface FileRoutesById {
   '/_authenticated/admin': typeof AuthenticatedAdminRouteRouteWithChildren
   '/_authenticated/carrinho': typeof AuthenticatedCarrinhoRoute
   '/_authenticated/conta': typeof AuthenticatedContaRoute
+  '/_authenticated/favoritos': typeof AuthenticatedFavoritosRoute
   '/_authenticated/meus-pedidos': typeof AuthenticatedMeusPedidosRoute
   '/produtos/$id': typeof ProdutosIdRoute
   '/_authenticated/admin/$id': typeof AuthenticatedAdminIdRoute
+  '/_authenticated/admin/avaliacoes': typeof AuthenticatedAdminAvaliacoesRoute
   '/_authenticated/admin/novo': typeof AuthenticatedAdminNovoRoute
   '/_authenticated/admin/pedidos': typeof AuthenticatedAdminPedidosRoute
   '/_authenticated/checkout/falha': typeof AuthenticatedCheckoutFalhaRoute
@@ -244,6 +272,7 @@ export interface FileRouteTypes {
     | '/auth'
     | '/categorias'
     | '/contato'
+    | '/politicas'
     | '/privacidade'
     | '/produtos'
     | '/reset-password'
@@ -252,9 +281,11 @@ export interface FileRouteTypes {
     | '/admin'
     | '/carrinho'
     | '/conta'
+    | '/favoritos'
     | '/meus-pedidos'
     | '/produtos/$id'
     | '/admin/$id'
+    | '/admin/avaliacoes'
     | '/admin/novo'
     | '/admin/pedidos'
     | '/checkout/falha'
@@ -269,6 +300,7 @@ export interface FileRouteTypes {
     | '/auth'
     | '/categorias'
     | '/contato'
+    | '/politicas'
     | '/privacidade'
     | '/produtos'
     | '/reset-password'
@@ -276,9 +308,11 @@ export interface FileRouteTypes {
     | '/termos'
     | '/carrinho'
     | '/conta'
+    | '/favoritos'
     | '/meus-pedidos'
     | '/produtos/$id'
     | '/admin/$id'
+    | '/admin/avaliacoes'
     | '/admin/novo'
     | '/admin/pedidos'
     | '/checkout/falha'
@@ -294,6 +328,7 @@ export interface FileRouteTypes {
     | '/auth'
     | '/categorias'
     | '/contato'
+    | '/politicas'
     | '/privacidade'
     | '/produtos'
     | '/reset-password'
@@ -302,9 +337,11 @@ export interface FileRouteTypes {
     | '/_authenticated/admin'
     | '/_authenticated/carrinho'
     | '/_authenticated/conta'
+    | '/_authenticated/favoritos'
     | '/_authenticated/meus-pedidos'
     | '/produtos/$id'
     | '/_authenticated/admin/$id'
+    | '/_authenticated/admin/avaliacoes'
     | '/_authenticated/admin/novo'
     | '/_authenticated/admin/pedidos'
     | '/_authenticated/checkout/falha'
@@ -321,6 +358,7 @@ export interface RootRouteChildren {
   AuthRoute: typeof AuthRoute
   CategoriasRoute: typeof CategoriasRoute
   ContatoRoute: typeof ContatoRoute
+  PoliticasRoute: typeof PoliticasRoute
   PrivacidadeRoute: typeof PrivacidadeRoute
   ProdutosRoute: typeof ProdutosRouteWithChildren
   ResetPasswordRoute: typeof ResetPasswordRoute
@@ -364,6 +402,13 @@ declare module '@tanstack/react-router' {
       path: '/privacidade'
       fullPath: '/privacidade'
       preLoaderRoute: typeof PrivacidadeRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/politicas': {
+      id: '/politicas'
+      path: '/politicas'
+      fullPath: '/politicas'
+      preLoaderRoute: typeof PoliticasRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/contato': {
@@ -413,6 +458,13 @@ declare module '@tanstack/react-router' {
       path: '/meus-pedidos'
       fullPath: '/meus-pedidos'
       preLoaderRoute: typeof AuthenticatedMeusPedidosRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/favoritos': {
+      id: '/_authenticated/favoritos'
+      path: '/favoritos'
+      fullPath: '/favoritos'
+      preLoaderRoute: typeof AuthenticatedFavoritosRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/conta': {
@@ -485,6 +537,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAdminNovoRouteImport
       parentRoute: typeof AuthenticatedAdminRouteRoute
     }
+    '/_authenticated/admin/avaliacoes': {
+      id: '/_authenticated/admin/avaliacoes'
+      path: '/avaliacoes'
+      fullPath: '/admin/avaliacoes'
+      preLoaderRoute: typeof AuthenticatedAdminAvaliacoesRouteImport
+      parentRoute: typeof AuthenticatedAdminRouteRoute
+    }
     '/_authenticated/admin/$id': {
       id: '/_authenticated/admin/$id'
       path: '/$id'
@@ -504,6 +563,7 @@ declare module '@tanstack/react-router' {
 
 interface AuthenticatedAdminRouteRouteChildren {
   AuthenticatedAdminIdRoute: typeof AuthenticatedAdminIdRoute
+  AuthenticatedAdminAvaliacoesRoute: typeof AuthenticatedAdminAvaliacoesRoute
   AuthenticatedAdminNovoRoute: typeof AuthenticatedAdminNovoRoute
   AuthenticatedAdminPedidosRoute: typeof AuthenticatedAdminPedidosRoute
   AuthenticatedAdminIndexRoute: typeof AuthenticatedAdminIndexRoute
@@ -512,6 +572,7 @@ interface AuthenticatedAdminRouteRouteChildren {
 const AuthenticatedAdminRouteRouteChildren: AuthenticatedAdminRouteRouteChildren =
   {
     AuthenticatedAdminIdRoute: AuthenticatedAdminIdRoute,
+    AuthenticatedAdminAvaliacoesRoute: AuthenticatedAdminAvaliacoesRoute,
     AuthenticatedAdminNovoRoute: AuthenticatedAdminNovoRoute,
     AuthenticatedAdminPedidosRoute: AuthenticatedAdminPedidosRoute,
     AuthenticatedAdminIndexRoute: AuthenticatedAdminIndexRoute,
@@ -526,6 +587,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedAdminRouteRoute: typeof AuthenticatedAdminRouteRouteWithChildren
   AuthenticatedCarrinhoRoute: typeof AuthenticatedCarrinhoRoute
   AuthenticatedContaRoute: typeof AuthenticatedContaRoute
+  AuthenticatedFavoritosRoute: typeof AuthenticatedFavoritosRoute
   AuthenticatedMeusPedidosRoute: typeof AuthenticatedMeusPedidosRoute
   AuthenticatedCheckoutFalhaRoute: typeof AuthenticatedCheckoutFalhaRoute
   AuthenticatedCheckoutPendenteRoute: typeof AuthenticatedCheckoutPendenteRoute
@@ -537,6 +599,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedAdminRouteRoute: AuthenticatedAdminRouteRouteWithChildren,
   AuthenticatedCarrinhoRoute: AuthenticatedCarrinhoRoute,
   AuthenticatedContaRoute: AuthenticatedContaRoute,
+  AuthenticatedFavoritosRoute: AuthenticatedFavoritosRoute,
   AuthenticatedMeusPedidosRoute: AuthenticatedMeusPedidosRoute,
   AuthenticatedCheckoutFalhaRoute: AuthenticatedCheckoutFalhaRoute,
   AuthenticatedCheckoutPendenteRoute: AuthenticatedCheckoutPendenteRoute,
@@ -565,6 +628,7 @@ const rootRouteChildren: RootRouteChildren = {
   AuthRoute: AuthRoute,
   CategoriasRoute: CategoriasRoute,
   ContatoRoute: ContatoRoute,
+  PoliticasRoute: PoliticasRoute,
   PrivacidadeRoute: PrivacidadeRoute,
   ProdutosRoute: ProdutosRouteWithChildren,
   ResetPasswordRoute: ResetPasswordRoute,

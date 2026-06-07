@@ -5,13 +5,25 @@ import {
   adminListProducts,
   deleteProduct,
   toggleDisponivel,
+  toggleFeatured,
 } from "@/lib/admin-products.functions";
+import { getAdminStats } from "@/lib/admin-stats.functions";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
 import { formatBRL } from "@/lib/shop";
-import { Plus, Pencil, Trash2, ImageOff, Package } from "lucide-react";
+import {
+  Plus,
+  Pencil,
+  Trash2,
+  ImageOff,
+  Package,
+  PackageX,
+  Sparkles,
+  Star,
+  ShoppingBag,
+} from "lucide-react";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -32,22 +44,62 @@ export const Route = createFileRoute("/_authenticated/admin/")({
   component: AdminDashboard,
 });
 
+function StatCard({
+  icon: Icon,
+  label,
+  value,
+  accent,
+}: {
+  icon: any;
+  label: string;
+  value: number | string;
+  accent?: string;
+}) {
+  return (
+    <Card className="flex items-center gap-3 rounded-2xl p-4 shadow-card">
+      <span
+        className={
+          "grid h-11 w-11 place-items-center rounded-full text-primary " +
+          (accent ?? "bg-secondary")
+        }
+      >
+        <Icon className="h-5 w-5" />
+      </span>
+      <div>
+        <p className="text-xs uppercase tracking-wide text-muted-foreground">{label}</p>
+        <p className="text-xl font-bold">{value}</p>
+      </div>
+    </Card>
+  );
+}
+
 function AdminDashboard() {
   const router = useRouter();
   const listFn = useServerFn(adminListProducts);
   const delFn = useServerFn(deleteProduct);
   const toggleFn = useServerFn(toggleDisponivel);
+  const toggleFeatFn = useServerFn(toggleFeatured);
+  const statsFn = useServerFn(getAdminStats);
 
   const { data, isLoading, refetch } = useQuery({
     queryKey: ["admin-products"],
     queryFn: () => listFn(),
   });
+  const { data: stats, refetch: refetchStats } = useQuery({
+    queryKey: ["admin-stats"],
+    queryFn: () => statsFn(),
+  });
+
+  const refresh = () => {
+    refetch();
+    refetchStats();
+  };
 
   const handleDelete = async (id: string) => {
     try {
       await delFn({ data: { id } });
       toast.success("Produto excluído.");
-      refetch();
+      refresh();
     } catch (e: any) {
       toast.error(e.message ?? "Erro ao excluir.");
     }
@@ -56,25 +108,35 @@ function AdminDashboard() {
   const handleToggle = async (id: string, value: boolean) => {
     try {
       await toggleFn({ data: { id, disponivel: value } });
-      refetch();
+      refresh();
     } catch (e: any) {
       toast.error(e.message ?? "Erro ao atualizar.");
     }
   };
 
+  const handleToggleFeatured = async (id: string, value: boolean) => {
+    try {
+      await toggleFeatFn({ data: { id, is_featured: value } });
+      refresh();
+    } catch (e: any) {
+      toast.error(e.message ?? "Erro ao atualizar destaque.");
+    }
+  };
+
   return (
     <div className="container mx-auto px-4 py-10">
-      <div className="mb-8 flex flex-wrap items-center justify-between gap-3">
+      <div className="mb-6 flex flex-wrap items-center justify-between gap-3">
         <div>
           <h1 className="text-3xl font-bold">Painel da loja</h1>
           <p className="text-muted-foreground">Gerencie seus produtos com carinho ♡</p>
         </div>
         <div className="flex flex-wrap gap-2">
-          <Button
-            asChild
-            variant="outline"
-            className="rounded-full"
-          >
+          <Button asChild variant="outline" className="rounded-full">
+            <Link to="/admin/avaliacoes">
+              <Star className="mr-2 h-4 w-4" /> Avaliações
+            </Link>
+          </Button>
+          <Button asChild variant="outline" className="rounded-full">
             <Link to="/admin/pedidos">
               <Package className="mr-2 h-4 w-4" /> Ver pedidos
             </Link>
@@ -87,6 +149,47 @@ function AdminDashboard() {
           </Button>
         </div>
       </div>
+
+      <div className="mb-8 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+        <StatCard icon={Package} label="Produtos cadastrados" value={stats?.totalProducts ?? "—"} />
+        <StatCard icon={ShoppingBag} label="Pedidos totais" value={stats?.totalOrders ?? "—"} />
+        <StatCard icon={PackageX} label="Produtos esgotados" value={stats?.esgotados ?? "—"} />
+        <StatCard icon={Sparkles} label="Em destaque" value={stats?.destaques ?? "—"} />
+      </div>
+
+      {stats && stats.ultimosPedidos.length > 0 && (
+        <Card className="mb-8 rounded-2xl p-5 shadow-card">
+          <div className="mb-3 flex items-center justify-between">
+            <h2 className="font-semibold">Últimos pedidos</h2>
+            <Link to="/admin/pedidos" className="text-sm text-primary hover:underline">
+              Ver todos
+            </Link>
+          </div>
+          <div className="grid gap-2">
+            {stats.ultimosPedidos.map((o) => (
+              <div
+                key={o.id}
+                className="flex flex-wrap items-center justify-between gap-2 rounded-xl bg-secondary/40 px-3 py-2 text-sm"
+              >
+                <div className="min-w-0">
+                  <p className="truncate font-medium">{o.customer_name}</p>
+                  <p className="text-xs text-muted-foreground">
+                    {new Date(o.created_at).toLocaleString("pt-BR")}
+                  </p>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Badge variant="secondary" className="rounded-full text-xs">
+                    {o.payment_status}
+                  </Badge>
+                  <span className="font-semibold text-primary">
+                    {formatBRL(o.total_price)}
+                  </span>
+                </div>
+              </div>
+            ))}
+          </div>
+        </Card>
+      )}
 
       {isLoading ? (
         <p className="text-muted-foreground">Carregando…</p>
@@ -119,6 +222,21 @@ function AdminDashboard() {
                   <Badge variant="secondary" className="rounded-full">
                     {p.categoria}
                   </Badge>
+                  {p.is_featured && (
+                    <Badge className="rounded-full bg-gradient-to-r from-primary to-purple-soft text-primary-foreground">
+                      <Sparkles className="mr-1 h-3 w-3" /> Destaque
+                    </Badge>
+                  )}
+                  {p.badge && (
+                    <Badge variant="outline" className="rounded-full">
+                      {p.badge}
+                    </Badge>
+                  )}
+                  {!p.disponivel && (
+                    <Badge variant="outline" className="rounded-full text-muted-foreground">
+                      Esgotado
+                    </Badge>
+                  )}
                 </div>
                 <p className="text-lg font-bold text-primary">{formatBRL(p.preco)}</p>
                 {p.descricao_curta && (
@@ -126,19 +244,21 @@ function AdminDashboard() {
                 )}
               </div>
               <div className="flex flex-wrap items-center gap-2">
-                <label className="flex items-center gap-2 text-sm">
+                <label className="flex items-center gap-2 text-xs">
                   <Switch
                     checked={p.disponivel}
                     onCheckedChange={(v) => handleToggle(p.id, v)}
                   />
-                  {p.disponivel ? "Disponível" : "Indisponível"}
+                  Disponível
                 </label>
-                <Button
-                  asChild
-                  variant="outline"
-                  size="sm"
-                  className="rounded-full"
-                >
+                <label className="flex items-center gap-2 text-xs">
+                  <Switch
+                    checked={p.is_featured}
+                    onCheckedChange={(v) => handleToggleFeatured(p.id, v)}
+                  />
+                  Destaque
+                </label>
+                <Button asChild variant="outline" size="sm" className="rounded-full">
                   <Link to="/admin/$id" params={{ id: p.id }}>
                     <Pencil className="mr-1 h-4 w-4" /> Editar
                   </Link>
