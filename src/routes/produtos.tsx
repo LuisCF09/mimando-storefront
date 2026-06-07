@@ -1,6 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { queryOptions, useSuspenseQuery } from "@tanstack/react-query";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { listProducts, type Product } from "@/lib/products.functions";
 import { CATEGORIES, formatBRL, whatsappLink } from "@/lib/shop";
 import { Card, CardContent } from "@/components/ui/card";
@@ -10,6 +10,8 @@ import { Input } from "@/components/ui/input";
 import { ImageOff, MessageCircle, PackageOpen, Search, ShoppingCart } from "lucide-react";
 import { useCart } from "@/lib/cart";
 import { toast } from "sonner";
+import { FavoriteButton } from "@/components/FavoriteButton";
+import { CustomBadge, FeaturedBadge, SoldOutBadge } from "@/components/ProductBadges";
 
 const productsQuery = queryOptions({
   queryKey: ["products", "all"],
@@ -38,36 +40,36 @@ export const Route = createFileRoute("/produtos")({
   notFoundComponent: () => <div>Página não encontrada.</div>,
 });
 
-type PriceRange = "all" | "lt30" | "30to60" | "gt60";
-type Availability = "all" | "available";
-
-const PRICE_LABELS: Record<PriceRange, string> = {
-  all: "Todos os preços",
-  lt30: "Até R$ 30",
-  "30to60": "R$ 30 a R$ 60",
-  gt60: "Acima de R$ 60",
-};
-
-function matchesPrice(p: number, r: PriceRange) {
-  if (r === "lt30") return p < 30;
-  if (r === "30to60") return p >= 30 && p <= 60;
-  if (r === "gt60") return p > 60;
-  return true;
-}
+type SortMode = "recent" | "price_asc" | "price_desc";
 
 function ProductsPage() {
   const { data: products } = useSuspenseQuery(productsQuery);
   const [filter, setFilter] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState<string>("");
-  const [price, setPrice] = useState<PriceRange>("all");
-  const [availability, setAvailability] = useState<Availability>("all");
+  const [sort, setSort] = useState<SortMode>("recent");
+  const [onlyAvailable, setOnlyAvailable] = useState(false);
+  const [onlyFeatured, setOnlyFeatured] = useState(false);
 
-  const query = searchQuery.trim().toLowerCase();
-  const filtered = products
-    .filter((p) => (filter ? p.categoria === filter : true))
-    .filter((p) => (query ? p.nome.toLowerCase().includes(query) : true))
-    .filter((p) => matchesPrice(Number(p.preco), price))
-    .filter((p) => (availability === "available" ? p.disponivel : true));
+  const filtered = useMemo(() => {
+    const q = searchQuery.trim().toLowerCase();
+    let out = products
+      .filter((p) => (filter ? p.categoria === filter : true))
+      .filter((p) => {
+        if (!q) return true;
+        return (
+          p.nome.toLowerCase().includes(q) ||
+          p.categoria.toLowerCase().includes(q) ||
+          (p.descricao_curta ?? "").toLowerCase().includes(q) ||
+          (p.descricao_completa ?? "").toLowerCase().includes(q)
+        );
+      })
+      .filter((p) => (onlyAvailable ? p.disponivel : true))
+      .filter((p) => (onlyFeatured ? p.is_featured : true));
+
+    if (sort === "price_asc") out = [...out].sort((a, b) => a.preco - b.preco);
+    else if (sort === "price_desc") out = [...out].sort((a, b) => b.preco - a.preco);
+    return out;
+  }, [products, filter, searchQuery, onlyAvailable, onlyFeatured, sort]);
 
   return (
     <div className="container mx-auto px-4 py-10">
@@ -85,8 +87,8 @@ function ProductsPage() {
             type="text"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder="Buscar produtos..."
-            aria-label="Buscar produtos por nome"
+            placeholder="Buscar por nome, categoria ou descrição..."
+            aria-label="Buscar produtos"
             className="rounded-full pl-9"
           />
         </div>
@@ -101,34 +103,29 @@ function ProductsPage() {
         ))}
       </div>
 
-      <div className="mb-8 flex flex-wrap items-center justify-center gap-2 text-sm">
+      <div className="mb-8 flex flex-wrap items-center justify-center gap-3 text-sm">
         <label className="flex items-center gap-2">
-          <span className="text-muted-foreground">Preço:</span>
+          <span className="text-muted-foreground">Ordenar:</span>
           <select
-            value={price}
-            onChange={(e) => setPrice(e.target.value as PriceRange)}
+            value={sort}
+            onChange={(e) => setSort(e.target.value as SortMode)}
             className="rounded-full border border-input bg-card px-3 py-1.5"
           >
-            {(Object.keys(PRICE_LABELS) as PriceRange[]).map((k) => (
-              <option key={k} value={k}>{PRICE_LABELS[k]}</option>
-            ))}
+            <option value="recent">Mais recentes</option>
+            <option value="price_asc">Preço: menor para maior</option>
+            <option value="price_desc">Preço: maior para menor</option>
           </select>
         </label>
-        <label className="flex items-center gap-2">
-          <span className="text-muted-foreground">Disponibilidade:</span>
-          <select
-            value={availability}
-            onChange={(e) => setAvailability(e.target.value as Availability)}
-            className="rounded-full border border-input bg-card px-3 py-1.5"
-          >
-            <option value="all">Todos</option>
-            <option value="available">Apenas disponíveis</option>
-          </select>
-        </label>
+        <FilterChip active={onlyAvailable} onClick={() => setOnlyAvailable((v) => !v)}>
+          Disponíveis
+        </FilterChip>
+        <FilterChip active={onlyFeatured} onClick={() => setOnlyFeatured((v) => !v)}>
+          Em destaque
+        </FilterChip>
       </div>
 
       {filtered.length === 0 ? (
-        <EmptyState all={products.length === 0} hasSearch={query.length > 0} />
+        <EmptyState all={products.length === 0} hasSearch={searchQuery.trim().length > 0} />
       ) : (
         <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
           {filtered.map((p) => (
@@ -167,22 +164,32 @@ function FilterChip({
 
 function ProductCard({ p }: { p: Product }) {
   const { addItem } = useCart();
+  const esgotado = !p.disponivel;
   return (
-    <Card className="group flex flex-col overflow-hidden rounded-3xl border-border/60 shadow-card transition hover:-translate-y-1 hover:shadow-soft">
+    <Card className="group relative flex flex-col overflow-hidden rounded-3xl border-border/60 shadow-card transition duration-300 hover:-translate-y-1 hover:shadow-soft">
+      <FavoriteButton productId={p.id} />
       <Link to="/produtos/$id" params={{ id: p.id }}>
-        <div className="aspect-square overflow-hidden bg-secondary/50">
+        <div className="relative aspect-square overflow-hidden bg-secondary/50">
           {p.imagem_url ? (
             <img
               src={p.imagem_url}
               alt={p.nome}
               loading="lazy"
-              className="h-full w-full object-cover transition duration-500 group-hover:scale-105"
+              className={
+                "h-full w-full object-cover transition duration-500 group-hover:scale-105 " +
+                (esgotado ? "opacity-60" : "")
+              }
             />
           ) : (
             <div className="grid h-full place-items-center text-muted-foreground">
               <ImageOff className="h-10 w-10" />
             </div>
           )}
+          <div className="absolute left-3 top-3 flex flex-col items-start gap-1">
+            {esgotado && <SoldOutBadge />}
+            {p.is_featured && !esgotado && <FeaturedBadge />}
+            {p.badge && <CustomBadge label={p.badge} />}
+          </div>
         </div>
       </Link>
       <CardContent className="flex flex-1 flex-col space-y-2 p-4">
@@ -197,26 +204,23 @@ function ProductCard({ p }: { p: Product }) {
         )}
         <div className="flex items-center justify-between pt-1">
           <span className="text-lg font-bold text-primary">{formatBRL(p.preco)}</span>
-          {!p.disponivel && (
-            <Badge variant="outline" className="text-xs">
-              Indisponível
-            </Badge>
-          )}
         </div>
         <div className="mt-auto flex flex-col gap-2 pt-2">
           <Button
-            disabled={!p.disponivel}
+            disabled={esgotado}
             className="w-full rounded-full gradient-primary text-primary-foreground shadow-soft hover:opacity-90"
             onClick={() => {
               addItem({ productId: p.id, nome: p.nome, preco: Number(p.preco), imagem_url: p.imagem_url });
               toast.success("Adicionado ao carrinho ♡", { description: p.nome });
             }}
           >
-            <ShoppingCart className="mr-2 h-4 w-4" /> Adicionar ao carrinho
+            <ShoppingCart className="mr-2 h-4 w-4" />
+            {esgotado ? "Esgotado" : "Adicionar ao carrinho"}
           </Button>
           <Button asChild variant="outline" className="w-full rounded-full">
             <a href={whatsappLink(p.nome)} target="_blank" rel="noopener noreferrer">
-              <MessageCircle className="mr-2 h-4 w-4" /> Comprar pelo WhatsApp
+              <MessageCircle className="mr-2 h-4 w-4" />
+              {esgotado ? "Consultar disponibilidade" : "Comprar pelo WhatsApp"}
             </a>
           </Button>
           <Button asChild variant="ghost" size="sm" className="w-full rounded-full text-xs">

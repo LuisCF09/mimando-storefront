@@ -7,6 +7,9 @@ import { Badge } from "@/components/ui/badge";
 import { ArrowLeft, ImageOff, MessageCircle, ShoppingCart } from "lucide-react";
 import { useCart } from "@/lib/cart";
 import { toast } from "sonner";
+import { FavoriteButton } from "@/components/FavoriteButton";
+import { CustomBadge, FeaturedBadge, SoldOutBadge } from "@/components/ProductBadges";
+import { ReviewsSection } from "@/components/ReviewsSection";
 
 const productQuery = (id: string) =>
   queryOptions({
@@ -56,6 +59,7 @@ function ProductDetail() {
   const { data: p } = useSuspenseQuery(productQuery(id));
   const { addItem } = useCart();
   if (!p) return null;
+  const esgotado = !p.disponivel;
 
   return (
     <div className="container mx-auto max-w-5xl px-4 py-10">
@@ -67,15 +71,24 @@ function ProductDetail() {
       </Link>
 
       <div className="grid gap-8 md:grid-cols-2">
-        <div className="overflow-hidden rounded-3xl bg-card shadow-card">
+        <div className="relative overflow-hidden rounded-3xl bg-card shadow-card">
           <div className="aspect-square">
             {p.imagem_url ? (
-              <img src={p.imagem_url} alt={p.nome} className="h-full w-full object-cover" />
+              <img
+                src={p.imagem_url}
+                alt={p.nome}
+                className={"h-full w-full object-cover " + (esgotado ? "opacity-60" : "")}
+              />
             ) : (
               <div className="grid h-full place-items-center text-muted-foreground">
                 <ImageOff className="h-16 w-16" />
               </div>
             )}
+          </div>
+          <div className="absolute left-4 top-4 flex flex-col items-start gap-1">
+            {esgotado && <SoldOutBadge />}
+            {p.is_featured && !esgotado && <FeaturedBadge />}
+            {p.badge && <CustomBadge label={p.badge} />}
           </div>
         </div>
 
@@ -87,13 +100,13 @@ function ProductDetail() {
           <p className="mt-2 text-3xl font-bold text-primary">{formatBRL(p.preco)}</p>
 
           <div className="mt-3">
-            {p.disponivel ? (
-              <Badge className="rounded-full bg-green-100 text-green-800 hover:bg-green-100">
-                Disponível
+            {esgotado ? (
+              <Badge variant="outline" className="rounded-full">
+                Esgotado no momento
               </Badge>
             ) : (
-              <Badge variant="outline" className="rounded-full">
-                Indisponível no momento
+              <Badge className="rounded-full bg-green-100 text-green-800 hover:bg-green-100">
+                Disponível
               </Badge>
             )}
           </div>
@@ -114,14 +127,15 @@ function ProductDetail() {
           <div className="mt-8 flex flex-col gap-3">
             <Button
               size="lg"
-              disabled={!p.disponivel}
+              disabled={esgotado}
               className="w-full rounded-full gradient-primary text-primary-foreground shadow-soft hover:opacity-90"
               onClick={() => {
                 addItem({ productId: p.id, nome: p.nome, preco: p.preco, imagem_url: p.imagem_url });
                 toast.success("Adicionado ao carrinho ♡", { description: p.nome });
               }}
             >
-              <ShoppingCart className="mr-2 h-5 w-5" /> Adicionar ao carrinho
+              <ShoppingCart className="mr-2 h-5 w-5" />
+              {esgotado ? "Produto esgotado" : "Adicionar ao carrinho"}
             </Button>
             <Button
               asChild
@@ -130,15 +144,19 @@ function ProductDetail() {
               className="w-full rounded-full"
             >
               <a href={whatsappLink(p.nome)} target="_blank" rel="noopener noreferrer">
-                <MessageCircle className="mr-2 h-5 w-5" /> Comprar pelo WhatsApp
+                <MessageCircle className="mr-2 h-5 w-5" />
+                {esgotado ? "Consultar disponibilidade" : "Comprar pelo WhatsApp"}
               </a>
             </Button>
+            <FavoriteButton productId={p.id} variant="detail" />
           </div>
           <p className="mt-2 text-center text-xs text-muted-foreground">
             Pague online pelo site (Mercado Pago) ou combine direto com a vendedora pelo WhatsApp.
           </p>
         </div>
       </div>
+
+      <ReviewsSection productId={p.id} />
     </div>
   );
 }
