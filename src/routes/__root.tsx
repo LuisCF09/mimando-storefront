@@ -179,7 +179,7 @@ function RootComponent() {
                 WhatsApp
               </a>
               <a
-                href="https://instagram.com/mimando.papelaria"
+                href="https://www.instagram.com/mimando_presentescriativos/"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="hover:text-primary hover:underline"
