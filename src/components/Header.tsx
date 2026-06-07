@@ -145,6 +145,11 @@ export function Header() {
           </Button>
           {userId ? (
             <>
+              <Button asChild variant="ghost" size="icon" className="rounded-full" aria-label="Favoritos">
+                <Link to="/favoritos">
+                  <Heart className="h-5 w-5" />
+                </Link>
+              </Button>
               <Button asChild variant="ghost" size="sm" className="rounded-full">
                 <Link to="/meus-pedidos">
                   <Package className="mr-1 h-4 w-4" /> Pedidos
@@ -205,6 +210,11 @@ export function Header() {
                           Olá, <span className="font-semibold text-foreground">{firstName}</span>!
                         </p>
                       )}
+                      <Button asChild variant="outline" className="rounded-full">
+                        <Link to="/favoritos" onClick={() => setOpen(false)}>
+                          <Heart className="mr-1 h-4 w-4" /> Meus favoritos
+                        </Link>
+                      </Button>
                       <Button asChild variant="outline" className="rounded-full">
                         <Link to="/meus-pedidos" onClick={() => setOpen(false)}>
                           <Package className="mr-1 h-4 w-4" /> Meus pedidos
