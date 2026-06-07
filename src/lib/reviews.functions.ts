@@ -105,19 +105,36 @@ export const adminListReviews = createServerFn({ method: "GET" })
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { data, error } = await supabaseAdmin
       .from("reviews")
-      .select("id,rating,comment,created_at,user_id,product_id,products(nome),profiles(nome,email)")
+      .select("id,rating,comment,created_at,user_id,product_id")
       .order("created_at", { ascending: false });
     if (error) throw new Error(error.message);
-    return (data ?? []).map((r: any) => ({
+    const rows = data ?? [];
+    const productIds = Array.from(new Set(rows.map((r: any) => r.product_id)));
+    const userIds = Array.from(new Set(rows.map((r: any) => r.user_id)));
+    const [{ data: prods }, { data: profs }] = await Promise.all([
+      productIds.length
+        ? supabaseAdmin.from("products").select("id,nome").in("id", productIds)
+        : Promise.resolve({ data: [] as any[] }),
+      userIds.length
+        ? supabaseAdmin.from("profiles").select("id,nome,email").in("id", userIds)
+        : Promise.resolve({ data: [] as any[] }),
+    ]);
+    const pmap: Record<string, string> = {};
+    for (const p of prods ?? []) pmap[(p as any).id] = (p as any).nome;
+    const umap: Record<string, string> = {};
+    for (const u of profs ?? []) {
+      umap[(u as any).id] =
+        ((u as any).nome?.trim?.() || (u as any).email?.split?.("@")[0]) ?? "Cliente";
+    }
+    return rows.map((r: any) => ({
       id: r.id,
       rating: r.rating,
       comment: r.comment ?? "",
       created_at: r.created_at,
       user_id: r.user_id,
       product_id: r.product_id,
-      product_name: r.products?.nome ?? "—",
-      author_name:
-        (r.profiles?.nome?.trim?.() || r.profiles?.email?.split?.("@")[0]) ?? "Cliente",
+      product_name: pmap[r.product_id] ?? "—",
+      author_name: umap[r.user_id] ?? "Cliente",
     }));
   });
 
