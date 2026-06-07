@@ -24,6 +24,8 @@ export type ProductFormValues = {
   descricao_completa: string;
   imagem_url: string;
   disponivel: boolean;
+  is_featured: boolean;
+  badge: string;
 };
 
 export function ProductForm({
@@ -46,6 +48,8 @@ export function ProductForm({
   const [descricaoCompleta, setDescricaoCompleta] = useState(initial?.descricao_completa ?? "");
   const [imagemUrl, setImagemUrl] = useState(initial?.imagem_url ?? "");
   const [disponivel, setDisponivel] = useState<boolean>(initial?.disponivel ?? true);
+  const [isFeatured, setIsFeatured] = useState<boolean>(initial?.is_featured ?? false);
+  const [badge, setBadge] = useState<string>(initial?.badge ?? "");
   const [loading, setLoading] = useState(false);
 
   const submit = async (e: React.FormEvent) => {
@@ -63,6 +67,8 @@ export function ProductForm({
         descricao_completa: descricaoCompleta.trim(),
         imagem_url: imagemUrl.trim(),
         disponivel,
+        is_featured: isFeatured,
+        badge: badge.trim(),
       });
     } finally {
       setLoading(false);
@@ -124,11 +130,34 @@ export function ProductForm({
             maxLength={5000}
           />
         </div>
-        <div className="flex items-center gap-3">
-          <Switch checked={disponivel} onCheckedChange={setDisponivel} id="disp" />
-          <Label htmlFor="disp" className="cursor-pointer">
-            Produto disponível
-          </Label>
+        <div>
+          <Label htmlFor="badge">Selo personalizado (opcional)</Label>
+          <Input
+            id="badge"
+            value={badge}
+            onChange={(e) => setBadge(e.target.value)}
+            maxLength={40}
+            placeholder='Ex: "Novo", "Promo", "Edição limitada"'
+          />
+          <p className="mt-1 text-xs text-muted-foreground">
+            Aparece como etiqueta colorida no card. Deixe vazio para não mostrar.
+          </p>
+        </div>
+        <div className="grid gap-3 sm:grid-cols-2">
+          <label className="flex items-center gap-3 rounded-2xl bg-secondary/40 p-3">
+            <Switch checked={disponivel} onCheckedChange={setDisponivel} id="disp" />
+            <span className="text-sm">
+              <span className="block font-medium">Produto disponível</span>
+              <span className="text-xs text-muted-foreground">Desligue para marcar como esgotado.</span>
+            </span>
+          </label>
+          <label className="flex items-center gap-3 rounded-2xl bg-secondary/40 p-3">
+            <Switch checked={isFeatured} onCheckedChange={setIsFeatured} id="feat" />
+            <span className="text-sm">
+              <span className="block font-medium">Produto em destaque</span>
+              <span className="text-xs text-muted-foreground">Aparece na seção destaque da home.</span>
+            </span>
+          </label>
         </div>
       </Card>
 
