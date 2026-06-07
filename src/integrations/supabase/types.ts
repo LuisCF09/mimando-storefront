@@ -26,6 +26,59 @@ export type Database = {
         }
         Relationships: []
       }
+      contact_messages: {
+        Row: {
+          created_at: string
+          email: string
+          id: string
+          message: string
+          name: string
+        }
+        Insert: {
+          created_at?: string
+          email: string
+          id?: string
+          message: string
+          name: string
+        }
+        Update: {
+          created_at?: string
+          email?: string
+          id?: string
+          message?: string
+          name?: string
+        }
+        Relationships: []
+      }
+      favorites: {
+        Row: {
+          created_at: string
+          id: string
+          product_id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          product_id: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          product_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "favorites_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       order_items: {
         Row: {
           created_at: string
@@ -142,6 +195,7 @@ export type Database = {
       }
       products: {
         Row: {
+          badge: string | null
           categoria: string
           created_at: string
           descricao_completa: string
@@ -149,11 +203,13 @@ export type Database = {
           disponivel: boolean
           id: string
           imagem_url: string | null
+          is_featured: boolean
           nome: string
           preco: number
           updated_at: string
         }
         Insert: {
+          badge?: string | null
           categoria: string
           created_at?: string
           descricao_completa?: string
@@ -161,11 +217,13 @@ export type Database = {
           disponivel?: boolean
           id?: string
           imagem_url?: string | null
+          is_featured?: boolean
           nome: string
           preco: number
           updated_at?: string
         }
         Update: {
+          badge?: string | null
           categoria?: string
           created_at?: string
           descricao_completa?: string
@@ -173,6 +231,7 @@ export type Database = {
           disponivel?: boolean
           id?: string
           imagem_url?: string | null
+          is_featured?: boolean
           nome?: string
           preco?: number
           updated_at?: string
@@ -199,6 +258,44 @@ export type Database = {
           nome?: string | null
         }
         Relationships: []
+      }
+      reviews: {
+        Row: {
+          comment: string
+          created_at: string
+          id: string
+          product_id: string
+          rating: number
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          comment?: string
+          created_at?: string
+          id?: string
+          product_id: string
+          rating: number
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          comment?: string
+          created_at?: string
+          id?: string
+          product_id?: string
+          rating?: number
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "reviews_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       user_roles: {
         Row: {

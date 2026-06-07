@@ -1,6 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { Button } from "@/components/ui/button";
-import { Heart, Sparkles, Gift, MessageCircle } from "lucide-react";
+import { Heart, Sparkles, Gift, MessageCircle, MapPin } from "lucide-react";
 import { whatsappGenericLink } from "@/lib/shop";
 
 export const Route = createFileRoute("/sobre")({
@@ -10,7 +10,7 @@ export const Route = createFileRoute("/sobre")({
       {
         name: "description",
         content:
-          "Conheça a Mimando: papelaria fofa, canecas, garrafas, camisas, laços e presentes criativos escolhidos com carinho.",
+          "Conheça a Mimando: papelaria fofa, canecas, garrafas, camisas, laços e presentes criativos escolhidos com carinho. Atendemos principalmente o Sudeste brasileiro.",
       },
       { property: "og:title", content: "Sobre a Mimando" },
       {
@@ -34,10 +34,8 @@ function SobrePage() {
         </h1>
         <p className="mt-5 text-muted-foreground sm:text-lg">
           A Mimando Papelaria Fofa e Presentes Criativos nasceu para transformar
-          pequenos momentos em lembranças especiais. Trabalhamos com papelaria
-          fofa, canecas, garrafas, camisas, laços, personalizados e presentes
-          criativos, sempre escolhidos com carinho para quem ama surpreender,
-          presentear e se mimar.
+          pequenos presentes em momentos especiais. Trabalhamos com produtos
+          delicados, criativos e cheios de carinho, pensados para mimar quem você ama.
         </p>
       </div>
 
@@ -47,7 +45,7 @@ function SobrePage() {
           { icon: Gift, title: "Presentes únicos", text: "Personalizados e variados para qualquer ocasião especial." },
           { icon: Sparkles, title: "Atendimento humano", text: "Fale direto com a vendedora pelo WhatsApp, rápido e atencioso." },
         ].map(({ icon: Icon, title, text }) => (
-          <div key={title} className="rounded-2xl bg-card/80 p-5 text-center shadow-card">
+          <div key={title} className="rounded-2xl bg-card/80 p-5 text-center shadow-card transition hover:-translate-y-0.5 hover:shadow-soft">
             <span className="mx-auto grid h-10 w-10 place-items-center rounded-full bg-secondary text-primary">
               <Icon className="h-5 w-5" />
             </span>
@@ -55,6 +53,22 @@ function SobrePage() {
             <p className="mt-1 text-sm text-muted-foreground">{text}</p>
           </div>
         ))}
+      </div>
+
+      <div className="mt-8 rounded-2xl bg-card p-6 text-center shadow-card sm:text-left">
+        <div className="flex flex-col items-center gap-3 sm:flex-row sm:items-start">
+          <span className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-secondary text-primary">
+            <MapPin className="h-5 w-5" />
+          </span>
+          <div>
+            <h2 className="font-semibold">Onde atendemos</h2>
+            <p className="mt-1 text-sm text-muted-foreground">
+              Atendemos principalmente o <strong>Sudeste brasileiro</strong>. Para outras
+              regiões, fale com a vendedora pelo WhatsApp e a gente combina o envio
+              com todo carinho.
+            </p>
+          </div>
+        </div>
       </div>
 
       <div className="mt-10 flex flex-wrap justify-center gap-3">

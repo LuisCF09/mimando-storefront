@@ -15,6 +15,7 @@ export type Categoria = (typeof CATEGORIES)[number];
 
 export const WHATSAPP_NUMBER = "5511984399180";
 export const INSTAGRAM_URL = "https://www.instagram.com/mimando_presentescriativos/";
+export const EMAIL_LOJA = "contato@mimandopresentescriativos.com.br";
 export const HORARIO_ATENDIMENTO = "Segunda a sábado, das 9h às 18h";
 
 export const formatBRL = (n: number) =>

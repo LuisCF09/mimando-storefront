@@ -1,7 +1,23 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
+import { useQuery } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
-import { Heart, Sparkles, Gift, Star, MessageCircle, ShoppingBag } from "lucide-react";
-import { CATEGORIES, whatsappGenericLink } from "@/lib/shop";
+import { Card, CardContent } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import {
+  Heart,
+  Sparkles,
+  Gift,
+  Star,
+  MessageCircle,
+  ShoppingBag,
+  ImageOff,
+  ShoppingCart,
+} from "lucide-react";
+import { CATEGORIES, formatBRL, whatsappGenericLink, whatsappLink } from "@/lib/shop";
+import { listFeaturedProducts } from "@/lib/products.functions";
+import { CustomBadge, FeaturedBadge } from "@/components/ProductBadges";
+import { useCart } from "@/lib/cart";
+import { toast } from "sonner";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -23,6 +39,12 @@ export const Route = createFileRoute("/")({
 });
 
 function Home() {
+  const { data: featured } = useQuery({
+    queryKey: ["featured-products"],
+    queryFn: () => listFeaturedProducts(),
+  });
+  const { addItem } = useCart();
+
   return (
     <div>
       {/* HERO */}
@@ -43,11 +65,7 @@ function Home() {
               escolhidos com carinho para deixar qualquer momento mais especial.
             </p>
             <div className="mt-8 flex flex-wrap justify-center gap-3">
-              <Button
-                asChild
-                size="lg"
-                className="rounded-full gradient-primary text-primary-foreground shadow-soft hover:opacity-90"
-              >
+              <Button asChild size="lg" className="rounded-full gradient-primary text-primary-foreground shadow-soft hover:opacity-90">
                 <Link to="/produtos">
                   <Gift className="mr-2 h-5 w-5" /> Ver produtos
                 </Link>
@@ -57,12 +75,7 @@ function Home() {
                   <ShoppingBag className="mr-2 h-5 w-5" /> Comprar pelo site
                 </Link>
               </Button>
-              <Button
-                asChild
-                size="lg"
-                variant="outline"
-                className="rounded-full border-primary/40 text-primary hover:bg-primary/5"
-              >
+              <Button asChild size="lg" variant="outline" className="rounded-full border-primary/40 text-primary hover:bg-primary/5">
                 <a href={whatsappGenericLink()} target="_blank" rel="noopener noreferrer">
                   <MessageCircle className="mr-2 h-5 w-5" /> Comprar pelo WhatsApp
                 </a>
@@ -71,6 +84,87 @@ function Home() {
           </div>
         </div>
       </section>
+
+      {/* PRODUTOS EM DESTAQUE */}
+      {featured && featured.length > 0 && (
+        <section className="container mx-auto px-4 pb-12">
+          <div className="mx-auto max-w-6xl">
+            <div className="mb-6 flex items-end justify-between">
+              <div>
+                <h2 className="flex items-center gap-2 text-2xl font-bold sm:text-3xl">
+                  <Sparkles className="h-6 w-6 text-primary" /> Produtos em destaque
+                </h2>
+                <p className="mt-1 text-sm text-muted-foreground">
+                  Selecionados a dedo pela Mimando ♡
+                </p>
+              </div>
+              <Link to="/produtos" className="hidden text-sm text-primary hover:underline sm:inline">
+                Ver todos →
+              </Link>
+            </div>
+            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+              {featured.map((p) => (
+                <Card
+                  key={p.id}
+                  className="group flex flex-col overflow-hidden rounded-3xl border-border/60 shadow-card transition hover:-translate-y-1 hover:shadow-soft"
+                >
+                  <Link to="/produtos/$id" params={{ id: p.id }}>
+                    <div className="relative aspect-square overflow-hidden bg-secondary/50">
+                      {p.imagem_url ? (
+                        <img
+                          src={p.imagem_url}
+                          alt={p.nome}
+                          loading="lazy"
+                          className="h-full w-full object-cover transition duration-500 group-hover:scale-105"
+                        />
+                      ) : (
+                        <div className="grid h-full place-items-center text-muted-foreground">
+                          <ImageOff className="h-10 w-10" />
+                        </div>
+                      )}
+                      <div className="absolute left-3 top-3 flex flex-col gap-1">
+                        <FeaturedBadge />
+                        {p.badge && <CustomBadge label={p.badge} />}
+                      </div>
+                    </div>
+                  </Link>
+                  <CardContent className="flex flex-1 flex-col gap-2 p-4">
+                    <Badge variant="secondary" className="w-fit rounded-full font-normal">
+                      {p.categoria}
+                    </Badge>
+                    <Link to="/produtos/$id" params={{ id: p.id }} className="hover:text-primary">
+                      <h3 className="line-clamp-1 font-semibold">{p.nome}</h3>
+                    </Link>
+                    <span className="text-lg font-bold text-primary">{formatBRL(p.preco)}</span>
+                    <div className="mt-auto flex flex-col gap-2 pt-2">
+                      <Button
+                        size="sm"
+                        className="w-full rounded-full gradient-primary text-primary-foreground shadow-soft hover:opacity-90"
+                        onClick={() => {
+                          addItem({ productId: p.id, nome: p.nome, preco: p.preco, imagem_url: p.imagem_url });
+                          toast.success("Adicionado ao carrinho ♡", { description: p.nome });
+                        }}
+                      >
+                        <ShoppingCart className="mr-2 h-4 w-4" /> Adicionar
+                      </Button>
+                      <Button asChild size="sm" variant="outline" className="w-full rounded-full">
+                        <a href={whatsappLink(p.nome)} target="_blank" rel="noopener noreferrer">
+                          <MessageCircle className="mr-2 h-4 w-4" /> WhatsApp
+                        </a>
+                      </Button>
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+            <div className="mt-6 text-center sm:hidden">
+              <Link to="/produtos" className="text-sm text-primary hover:underline">
+                Ver todos os produtos →
+              </Link>
+            </div>
+          </div>
+        </section>
+      )}
 
       {/* CATEGORIAS EM DESTAQUE */}
       <section className="container mx-auto px-4 pb-12">
@@ -124,10 +218,8 @@ function Home() {
           <h2 className="text-2xl font-bold sm:text-3xl">Sobre a Mimando</h2>
           <p className="mt-3 text-muted-foreground">
             A Mimando Papelaria Fofa e Presentes Criativos nasceu para transformar
-            pequenos momentos em lembranças especiais. Trabalhamos com papelaria
-            fofa, canecas, garrafas, camisas, laços, personalizados e presentes
-            criativos, sempre escolhidos com carinho para quem ama surpreender,
-            presentear e se mimar.
+            pequenos presentes em momentos especiais. Trabalhamos com produtos
+            delicados, criativos e cheios de carinho, pensados para mimar quem você ama.
           </p>
           <div className="mt-5">
             <Button asChild variant="outline" className="rounded-full">
@@ -145,11 +237,7 @@ function Home() {
             Confira nosso catálogo e escolha o presente perfeito para o seu momento.
           </p>
           <div className="mt-6 flex flex-wrap justify-center gap-3">
-            <Button
-              asChild
-              size="lg"
-              className="rounded-full gradient-primary text-primary-foreground shadow-soft hover:opacity-90"
-            >
+            <Button asChild size="lg" className="rounded-full gradient-primary text-primary-foreground shadow-soft hover:opacity-90">
               <Link to="/produtos">Explorar produtos</Link>
             </Button>
             <Button asChild size="lg" variant="outline" className="rounded-full">

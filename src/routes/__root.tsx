@@ -162,6 +162,9 @@ function RootComponent() {
               <Link to="/contato" className="hover:text-primary hover:underline">
                 Contato
               </Link>
+              <Link to="/politicas" className="hover:text-primary hover:underline">
+                Políticas da loja
+              </Link>
               <Link to="/privacidade" className="hover:text-primary hover:underline">
                 Política de Privacidade
               </Link>

@@ -48,6 +48,8 @@ function EditarProduto() {
             descricao_completa: data.descricao_completa,
             imagem_url: data.imagem_url ?? "",
             disponivel: data.disponivel,
+            is_featured: data.is_featured,
+            badge: data.badge ?? "",
           }}
           onSubmit={async (v) => {
             try {
