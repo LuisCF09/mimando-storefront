@@ -8,7 +8,7 @@ export const listMyFavorites = createServerFn({ method: "GET" })
     const { supabase, userId } = context;
     const { data, error } = await supabase
       .from("favorites")
-      .select("product_id, created_at, products!inner(id,nome,preco,categoria,descricao_curta,imagem_url,disponivel,is_featured,badge)")
+      .select("product_id, created_at, products!inner(id,nome,preco,categoria,descricao_curta,imagem_url,disponivel,is_featured,badge,created_at)")
       .eq("user_id", userId)
       .order("created_at", { ascending: false });
     if (error) throw new Error(error.message);
@@ -24,6 +24,7 @@ export const listMyFavorites = createServerFn({ method: "GET" })
         disponivel: !!r.products.disponivel,
         is_featured: !!r.products.is_featured,
         badge: (r.products.badge ?? null) as string | null,
+        created_at: (r.products.created_at ?? null) as string | null,
       },
     }));
   });
