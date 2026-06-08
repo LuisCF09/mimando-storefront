@@ -13,9 +13,9 @@ import {
   ImageOff,
   ShoppingCart,
 } from "lucide-react";
-import { CATEGORIES, formatBRL, whatsappGenericLink, whatsappLink } from "@/lib/shop";
+import { CATEGORIES, formatBRL, isNew, whatsappGenericLink, whatsappLink } from "@/lib/shop";
 import { listFeaturedProducts } from "@/lib/products.functions";
-import { CustomBadge, FeaturedBadge } from "@/components/ProductBadges";
+import { CustomBadge, FeaturedBadge, NewBadge, SoldOutBadge } from "@/components/ProductBadges";
 import { useCart } from "@/lib/cart";
 import { toast } from "sonner";
 
@@ -122,8 +122,10 @@ function Home() {
                           <ImageOff className="h-10 w-10" />
                         </div>
                       )}
-                      <div className="absolute left-3 top-3 flex flex-col gap-1">
-                        <FeaturedBadge />
+                      <div className="absolute left-3 top-3 flex flex-col items-start gap-1">
+                        {!p.disponivel && <SoldOutBadge />}
+                        {p.disponivel && <FeaturedBadge />}
+                        {isNew(p.created_at) && p.disponivel && <NewBadge />}
                         {p.badge && <CustomBadge label={p.badge} />}
                       </div>
                     </div>

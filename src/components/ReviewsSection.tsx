@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { Star, Trash2 } from "lucide-react";
@@ -72,6 +72,7 @@ export function ReviewsSection({ productId }: { productId: string }) {
   const listFn = useServerFn(listProductReviews);
   const upsertFn = useServerFn(upsertMyReview);
   const delFn = useServerFn(deleteMyReview);
+  const listRef = useRef<HTMLDivElement>(null);
 
   const { data, isLoading } = useQuery({
     queryKey: ["reviews", productId],
@@ -118,20 +119,76 @@ export function ReviewsSection({ productId }: { productId: string }) {
     }
   };
 
+  const distribution = (() => {
+    const d = [0, 0, 0, 0, 0];
+    data?.reviews.forEach((r) => {
+      if (r.rating >= 1 && r.rating <= 5) d[r.rating - 1]++;
+    });
+    return d;
+  })();
+  const total = data?.count ?? 0;
+
+  const scrollToList = () => {
+    listRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+  };
+
   return (
-    <section className="mt-10">
-      <div className="flex flex-wrap items-end justify-between gap-2">
-        <h2 className="text-xl font-bold">Avaliações</h2>
-        {data && data.count > 0 && (
-          <div className="flex items-center gap-2 text-sm text-muted-foreground">
-            <Stars value={Math.round(data.avg)} />
-            <span>
-              {data.avg.toFixed(1)} de 5 ({data.count} {data.count === 1 ? "avaliação" : "avaliações"})
-            </span>
+    <section className="mt-10" id="avaliacoes">
+      <h2 className="text-xl font-bold">Avaliações</h2>
+
+      {/* Resumo */}
+      <Card className="mt-4 rounded-2xl p-5 shadow-card">
+        {total > 0 && data ? (
+          <div className="grid gap-6 sm:grid-cols-[auto,1fr] sm:items-center">
+            <button
+              type="button"
+              onClick={scrollToList}
+              className="flex flex-col items-center rounded-2xl px-4 py-2 text-center transition hover:bg-secondary/60 focus:outline-none focus:ring-2 focus:ring-primary"
+              aria-label="Ver todas as avaliações"
+            >
+              <span className="text-4xl font-extrabold text-primary leading-none">
+                {data.avg.toFixed(1)}
+              </span>
+              <div className="mt-2">
+                <Stars value={Math.round(data.avg)} size={22} />
+              </div>
+              <span className="mt-1 text-xs text-muted-foreground">
+                {total} {total === 1 ? "avaliação" : "avaliações"}
+              </span>
+            </button>
+
+            <div className="space-y-1.5">
+              {[5, 4, 3, 2, 1].map((n) => {
+                const count = distribution[n - 1];
+                const pct = total > 0 ? Math.round((count / total) * 100) : 0;
+                return (
+                  <button
+                    key={n}
+                    type="button"
+                    onClick={scrollToList}
+                    className="flex w-full items-center gap-2 rounded-md px-1 py-0.5 text-xs text-muted-foreground transition hover:bg-secondary/40"
+                  >
+                    <span className="w-8 shrink-0 text-left">{n}★</span>
+                    <div className="h-2 flex-1 overflow-hidden rounded-full bg-secondary">
+                      <div
+                        className="h-full rounded-full bg-amber-400 transition-all"
+                        style={{ width: `${pct}%` }}
+                      />
+                    </div>
+                    <span className="w-10 shrink-0 text-right tabular-nums">{count}</span>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        ) : (
+          <div className="text-center text-sm text-muted-foreground">
+            Ainda não há avaliações. Seja a primeira a comentar ♡
           </div>
         )}
-      </div>
+      </Card>
 
+      {/* Form */}
       <Card className="mt-4 rounded-2xl p-5 shadow-card">
         {user ? (
           <form onSubmit={submit} className="space-y-3">
@@ -181,7 +238,8 @@ export function ReviewsSection({ productId }: { productId: string }) {
         )}
       </Card>
 
-      <div className="mt-4 space-y-3">
+      {/* Lista */}
+      <div ref={listRef} id="lista-avaliacoes" className="mt-4 space-y-3 scroll-mt-24">
         {isLoading ? (
           <p className="text-sm text-muted-foreground">Carregando avaliações…</p>
         ) : data && data.reviews.length > 0 ? (
@@ -197,11 +255,7 @@ export function ReviewsSection({ productId }: { productId: string }) {
               </p>
             </Card>
           ))
-        ) : (
-          <p className="text-sm text-muted-foreground">
-            Ainda não há avaliações. Seja a primeira a comentar ♡
-          </p>
-        )}
+        ) : null}
       </div>
     </section>
   );

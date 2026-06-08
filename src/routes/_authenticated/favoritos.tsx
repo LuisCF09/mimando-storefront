@@ -9,7 +9,8 @@ import { Button } from "@/components/ui/button";
 import { Heart, ImageOff, MessageCircle, ShoppingCart, Trash2 } from "lucide-react";
 import { useCart } from "@/lib/cart";
 import { toast } from "sonner";
-import { CustomBadge, FeaturedBadge, SoldOutBadge } from "@/components/ProductBadges";
+import { CustomBadge, FeaturedBadge, NewBadge, SoldOutBadge } from "@/components/ProductBadges";
+import { isNew } from "@/lib/shop";
 
 export const Route = createFileRoute("/_authenticated/favoritos")({
   head: () => ({
@@ -90,9 +91,10 @@ function FavoritosPage() {
                         <ImageOff className="h-10 w-10" />
                       </div>
                     )}
-                    <div className="absolute left-3 top-3 flex flex-col gap-1">
+                    <div className="absolute left-3 top-3 flex flex-col items-start gap-1">
                       {esgotado && <SoldOutBadge />}
                       {p.is_featured && !esgotado && <FeaturedBadge />}
+                      {isNew(p.created_at) && !esgotado && <NewBadge />}
                       {p.badge && <CustomBadge label={p.badge} />}
                     </div>
                   </div>
