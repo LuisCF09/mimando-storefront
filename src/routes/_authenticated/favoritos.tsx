@@ -9,7 +9,8 @@ import { Button } from "@/components/ui/button";
 import { Heart, ImageOff, MessageCircle, ShoppingCart, Trash2 } from "lucide-react";
 import { useCart } from "@/lib/cart";
 import { toast } from "sonner";
-import { CustomBadge, FeaturedBadge, SoldOutBadge } from "@/components/ProductBadges";
+import { CustomBadge, FeaturedBadge, NewBadge, SoldOutBadge } from "@/components/ProductBadges";
+import { isNew } from "@/lib/shop";
 
 export const Route = createFileRoute("/_authenticated/favoritos")({
   head: () => ({

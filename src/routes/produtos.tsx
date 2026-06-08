@@ -2,7 +2,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { queryOptions, useSuspenseQuery } from "@tanstack/react-query";
 import { useMemo, useState } from "react";
 import { listProducts, type Product } from "@/lib/products.functions";
-import { CATEGORIES, formatBRL, whatsappLink } from "@/lib/shop";
+import { CATEGORIES, formatBRL, isNew, whatsappLink } from "@/lib/shop";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -11,7 +11,7 @@ import { ImageOff, MessageCircle, PackageOpen, Search, ShoppingCart } from "luci
 import { useCart } from "@/lib/cart";
 import { toast } from "sonner";
 import { FavoriteButton } from "@/components/FavoriteButton";
-import { CustomBadge, FeaturedBadge, SoldOutBadge } from "@/components/ProductBadges";
+import { CustomBadge, FeaturedBadge, NewBadge, SoldOutBadge } from "@/components/ProductBadges";
 
 const productsQuery = queryOptions({
   queryKey: ["products", "all"],
@@ -188,6 +188,7 @@ function ProductCard({ p }: { p: Product }) {
           <div className="absolute left-3 top-3 flex flex-col items-start gap-1">
             {esgotado && <SoldOutBadge />}
             {p.is_featured && !esgotado && <FeaturedBadge />}
+            {isNew(p.created_at) && !esgotado && <NewBadge />}
             {p.badge && <CustomBadge label={p.badge} />}
           </div>
         </div>

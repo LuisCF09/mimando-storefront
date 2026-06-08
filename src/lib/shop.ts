@@ -21,6 +21,13 @@ export const HORARIO_ATENDIMENTO = "Segunda a sábado, das 9h às 18h";
 export const formatBRL = (n: number) =>
   new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(n);
 
+export function isNew(createdAt?: string | null, days = 14): boolean {
+  if (!createdAt) return false;
+  const created = new Date(createdAt).getTime();
+  if (Number.isNaN(created)) return false;
+  return Date.now() - created < days * 24 * 60 * 60 * 1000;
+}
+
 function waLink(text: string) {
   return `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(text)}`;
 }

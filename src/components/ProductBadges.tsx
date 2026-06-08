@@ -1,4 +1,4 @@
-import { Sparkles, PackageX, Tag } from "lucide-react";
+import { Sparkles, PackageX, Tag, Star } from "lucide-react";
 
 export function FeaturedBadge() {
   return (
@@ -12,6 +12,14 @@ export function SoldOutBadge() {
   return (
     <span className="inline-flex items-center gap-1 rounded-full bg-muted px-2.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">
       <PackageX className="h-3 w-3" /> Esgotado
+    </span>
+  );
+}
+
+export function NewBadge() {
+  return (
+    <span className="inline-flex items-center gap-1 rounded-full bg-emerald-500 px-2.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-white shadow-soft">
+      <Star className="h-3 w-3" /> Novo
     </span>
   );
 }

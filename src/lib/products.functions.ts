@@ -12,6 +12,7 @@ export type Product = {
   disponivel: boolean;
   is_featured: boolean;
   badge: string | null;
+  created_at: string | null;
 };
 
 function mapRow(r: any): Product {
@@ -26,6 +27,7 @@ function mapRow(r: any): Product {
     disponivel: !!r.disponivel,
     is_featured: !!r.is_featured,
     badge: (r.badge ?? null) as string | null,
+    created_at: (r.created_at ?? null) as string | null,
   };
 }
 
