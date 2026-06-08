@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
@@ -13,8 +13,9 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { CATEGORIES, type Categoria } from "@/lib/shop";
-import { ImageOff, Loader2 } from "lucide-react";
+import { ImageOff, Loader2, Upload } from "lucide-react";
 import { toast } from "sonner";
+import { supabase } from "@/integrations/supabase/client";
 
 export type ProductFormValues = {
   nome: string;
@@ -51,6 +52,26 @@ export function ProductForm({
   const [isFeatured, setIsFeatured] = useState<boolean>(initial?.is_featured ?? false);
   const [badge, setBadge] = useState<string>(initial?.badge ?? "");
   const [loading, setLoading] = useState(false);
+  const [uploading, setUploading] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const uploadImage = async (file: File) => {
+    setUploading(true);
+    try {
+      const ext = file.name.split(".").pop();
+      const path = `${Date.now()}.${ext}`;
+      const { error } = await supabase.storage
+        .from("produtos")
+        .upload(path, file, { upsert: true });
+      if (error) throw error;
+      const { data } = supabase.storage.from("produtos").getPublicUrl(path);
+      setImagemUrl(data.publicUrl);
+    } catch {
+      toast.error("Erro ao enviar imagem. Tente novamente.");
+    } finally {
+      setUploading(false);
+    }
+  };
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -163,7 +184,39 @@ export function ProductForm({
 
       <Card className="space-y-4 rounded-2xl p-6 shadow-card">
         <div>
-          <Label htmlFor="img">URL da imagem</Label>
+          <Label>Enviar imagem</Label>
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept="image/*"
+            className="hidden"
+            onChange={(e) => {
+              const file = e.target.files?.[0];
+              if (file) uploadImage(file);
+            }}
+          />
+          <Button
+            type="button"
+            variant="outline"
+            className="mt-1 w-full"
+            disabled={uploading}
+            onClick={() => fileInputRef.current?.click()}
+          >
+            {uploading ? (
+              <>
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                Enviando...
+              </>
+            ) : (
+              <>
+                <Upload className="mr-2 h-4 w-4" />
+                Escolher imagem
+              </>
+            )}
+          </Button>
+        </div>
+        <div>
+          <Label htmlFor="img">URL da imagem (alternativa)</Label>
           <Input
             id="img"
             type="url"
