@@ -13,6 +13,7 @@ export type Product = {
   is_featured: boolean;
   badge: string | null;
   created_at: string | null;
+  estoque: number | null;
 };
 
 function mapRow(r: any): Product {
@@ -28,10 +29,11 @@ function mapRow(r: any): Product {
     is_featured: !!r.is_featured,
     badge: (r.badge ?? null) as string | null,
     created_at: (r.created_at ?? null) as string | null,
+    estoque: r.estoque !== null && r.estoque !== undefined ? Number(r.estoque) : null,
   };
 }
 
-const SELECT = "id,nome,preco,categoria,descricao_curta,descricao_completa,imagem_url,disponivel,is_featured,badge,created_at";
+const SELECT = "id,nome,preco,categoria,descricao_curta,descricao_completa,imagem_url,disponivel,is_featured,badge,created_at,estoque";
 
 export const listProducts = createServerFn({ method: "GET" })
   .inputValidator((input: { categoria?: string } | undefined) =>

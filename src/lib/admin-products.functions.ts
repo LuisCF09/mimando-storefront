@@ -13,9 +13,10 @@ const productSchema = z.object({
   disponivel: z.boolean().default(true),
   is_featured: z.boolean().default(false),
   badge: z.string().trim().max(40).or(z.literal("")).optional().nullable(),
+  estoque: z.number().int().min(0).default(0),
 });
 
-const SELECT = "id,nome,preco,categoria,descricao_curta,descricao_completa,imagem_url,disponivel,is_featured,badge,created_at";
+const SELECT = "id,nome,preco,categoria,descricao_curta,descricao_completa,imagem_url,disponivel,is_featured,badge,created_at,estoque";
 
 async function assertAdmin(supabase: any, userId: string) {
   const { data, error } = await supabase
