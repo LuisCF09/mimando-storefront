@@ -201,7 +201,6 @@ export type Database = {
           descricao_completa: string
           descricao_curta: string
           disponivel: boolean
-          estoque: number
           id: string
           imagem_url: string | null
           is_featured: boolean
@@ -216,7 +215,6 @@ export type Database = {
           descricao_completa?: string
           descricao_curta?: string
           disponivel?: boolean
-          estoque?: number
           id?: string
           imagem_url?: string | null
           is_featured?: boolean
@@ -231,7 +229,6 @@ export type Database = {
           descricao_completa?: string
           descricao_curta?: string
           disponivel?: boolean
-          estoque?: number
           id?: string
           imagem_url?: string | null
           is_featured?: boolean
