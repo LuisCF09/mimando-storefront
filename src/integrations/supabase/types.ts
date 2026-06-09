@@ -50,6 +50,42 @@ export type Database = {
         }
         Relationships: []
       }
+      coupons: {
+        Row: {
+          ativo: boolean
+          codigo: string
+          created_at: string
+          id: string
+          min_subtotal: number
+          tipo: string
+          updated_at: string
+          validade: string | null
+          valor: number
+        }
+        Insert: {
+          ativo?: boolean
+          codigo: string
+          created_at?: string
+          id?: string
+          min_subtotal?: number
+          tipo: string
+          updated_at?: string
+          validade?: string | null
+          valor: number
+        }
+        Update: {
+          ativo?: boolean
+          codigo?: string
+          created_at?: string
+          id?: string
+          min_subtotal?: number
+          tipo?: string
+          updated_at?: string
+          validade?: string | null
+          valor?: number
+        }
+        Relationships: []
+      }
       favorites: {
         Row: {
           created_at: string
@@ -78,6 +114,24 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      occasions: {
+        Row: {
+          nome: string
+          ordem: number
+          slug: string
+        }
+        Insert: {
+          nome: string
+          ordem?: number
+          slug: string
+        }
+        Update: {
+          nome?: string
+          ordem?: number
+          slug?: string
+        }
+        Relationships: []
       }
       order_items: {
         Row: {
@@ -137,9 +191,11 @@ export type Database = {
           address_state: string
           address_street: string
           created_at: string
+          cupom_codigo: string | null
           customer_email: string
           customer_name: string
           customer_phone: string
+          desconto: number
           id: string
           mercado_pago_payment_id: string | null
           mercado_pago_preference_id: string | null
@@ -158,9 +214,11 @@ export type Database = {
           address_state: string
           address_street: string
           created_at?: string
+          cupom_codigo?: string | null
           customer_email: string
           customer_name: string
           customer_phone: string
+          desconto?: number
           id?: string
           mercado_pago_payment_id?: string | null
           mercado_pago_preference_id?: string | null
@@ -179,9 +237,11 @@ export type Database = {
           address_state?: string
           address_street?: string
           created_at?: string
+          cupom_codigo?: string | null
           customer_email?: string
           customer_name?: string
           customer_phone?: string
+          desconto?: number
           id?: string
           mercado_pago_payment_id?: string | null
           mercado_pago_preference_id?: string | null
@@ -193,6 +253,36 @@ export type Database = {
         }
         Relationships: []
       }
+      product_occasions: {
+        Row: {
+          occasion_slug: string
+          product_id: string
+        }
+        Insert: {
+          occasion_slug: string
+          product_id: string
+        }
+        Update: {
+          occasion_slug?: string
+          product_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "product_occasions_occasion_slug_fkey"
+            columns: ["occasion_slug"]
+            isOneToOne: false
+            referencedRelation: "occasions"
+            referencedColumns: ["slug"]
+          },
+          {
+            foreignKeyName: "product_occasions_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       products: {
         Row: {
           badge: string | null
@@ -201,9 +291,14 @@ export type Database = {
           descricao_completa: string
           descricao_curta: string
           disponivel: boolean
+          estoque: number
           id: string
           imagem_url: string | null
+          is_bestseller: boolean
           is_featured: boolean
+          is_novidade: boolean
+          is_personalizavel: boolean
+          is_promocao: boolean
           nome: string
           preco: number
           updated_at: string
@@ -215,9 +310,14 @@ export type Database = {
           descricao_completa?: string
           descricao_curta?: string
           disponivel?: boolean
+          estoque?: number
           id?: string
           imagem_url?: string | null
+          is_bestseller?: boolean
           is_featured?: boolean
+          is_novidade?: boolean
+          is_personalizavel?: boolean
+          is_promocao?: boolean
           nome: string
           preco: number
           updated_at?: string
@@ -229,9 +329,14 @@ export type Database = {
           descricao_completa?: string
           descricao_curta?: string
           disponivel?: boolean
+          estoque?: number
           id?: string
           imagem_url?: string | null
+          is_bestseller?: boolean
           is_featured?: boolean
+          is_novidade?: boolean
+          is_personalizavel?: boolean
+          is_promocao?: boolean
           nome?: string
           preco?: number
           updated_at?: string
@@ -296,6 +401,36 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      site_settings: {
+        Row: {
+          botao_link: string
+          botao_texto: string
+          imagem_url: string | null
+          key: string
+          subtitulo: string
+          titulo: string
+          updated_at: string
+        }
+        Insert: {
+          botao_link?: string
+          botao_texto?: string
+          imagem_url?: string | null
+          key: string
+          subtitulo?: string
+          titulo?: string
+          updated_at?: string
+        }
+        Update: {
+          botao_link?: string
+          botao_texto?: string
+          imagem_url?: string | null
+          key?: string
+          subtitulo?: string
+          titulo?: string
+          updated_at?: string
+        }
+        Relationships: []
       }
       user_roles: {
         Row: {
