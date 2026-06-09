@@ -9,8 +9,8 @@ import { Button } from "@/components/ui/button";
 import { Heart, ImageOff, MessageCircle, ShoppingCart, Trash2 } from "lucide-react";
 import { useCart } from "@/lib/cart";
 import { toast } from "sonner";
-import { CustomBadge, FeaturedBadge, NewBadge, SoldOutBadge } from "@/components/ProductBadges";
-import { isNew } from "@/lib/shop";
+import { ProductBadgeStack } from "@/components/ProductBadges";
+import { isNew, isSoldOut } from "@/lib/shop";
 
 export const Route = createFileRoute("/_authenticated/favoritos")({
   head: () => ({
@@ -68,7 +68,7 @@ function FavoritosPage() {
       ) : (
         <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
           {data.map(({ product: p }) => {
-            const esgotado = !p.disponivel;
+            const esgotado = isSoldOut(p);
             return (
               <Card
                 key={p.id}
@@ -91,12 +91,16 @@ function FavoritosPage() {
                         <ImageOff className="h-10 w-10" />
                       </div>
                     )}
-                    <div className="absolute left-3 top-3 flex flex-col items-start gap-1">
-                      {esgotado && <SoldOutBadge />}
-                      {p.is_featured && !esgotado && <FeaturedBadge />}
-                      {isNew(p.created_at) && !esgotado && <NewBadge />}
-                      {p.badge && <CustomBadge label={p.badge} />}
-                    </div>
+                    <ProductBadgeStack
+                      esgotado={esgotado}
+                      promocao={p.is_promocao}
+                      destaque={p.is_featured}
+                      bestseller={p.is_bestseller}
+                      novidade={p.is_novidade}
+                      novo={isNew(p.created_at)}
+                      personalizavel={p.is_personalizavel}
+                      custom={p.badge}
+                    />
                   </div>
                 </Link>
                 <CardContent className="flex flex-1 flex-col space-y-2 p-4">
