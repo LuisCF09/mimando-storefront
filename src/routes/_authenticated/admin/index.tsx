@@ -14,15 +14,8 @@ import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
 import { formatBRL } from "@/lib/shop";
 import {
-  Plus,
-  Pencil,
-  Trash2,
-  ImageOff,
-  Package,
-  PackageX,
-  Sparkles,
-  Star,
-  ShoppingBag,
+  Plus, Pencil, Trash2, ImageOff, Package, PackageX, Sparkles,
+  Star, ShoppingBag, Image as ImageIcon, BadgePercent,
 } from "lucide-react";
 import {
   AlertDialog,
@@ -132,14 +125,16 @@ function AdminDashboard() {
         </div>
         <div className="flex flex-wrap gap-2">
           <Button asChild variant="outline" className="rounded-full">
-            <Link to="/admin/avaliacoes">
-              <Star className="mr-2 h-4 w-4" /> Avaliações
-            </Link>
+            <Link to="/admin/banner"><ImageIcon className="mr-2 h-4 w-4" /> Banner</Link>
           </Button>
           <Button asChild variant="outline" className="rounded-full">
-            <Link to="/admin/pedidos">
-              <Package className="mr-2 h-4 w-4" /> Ver pedidos
-            </Link>
+            <Link to="/admin/cupons"><BadgePercent className="mr-2 h-4 w-4" /> Cupons</Link>
+          </Button>
+          <Button asChild variant="outline" className="rounded-full">
+            <Link to="/admin/avaliacoes"><Star className="mr-2 h-4 w-4" /> Avaliações</Link>
+          </Button>
+          <Button asChild variant="outline" className="rounded-full">
+            <Link to="/admin/pedidos"><Package className="mr-2 h-4 w-4" /> Ver pedidos</Link>
           </Button>
           <Button
             onClick={() => router.navigate({ to: "/admin/novo" })}
@@ -234,9 +229,12 @@ function AdminDashboard() {
                   )}
                   {!p.disponivel && (
                     <Badge variant="outline" className="rounded-full text-muted-foreground">
-                      Esgotado
+                      Indisponível
                     </Badge>
                   )}
+                  <Badge variant="outline" className={"rounded-full " + (p.estoque <= 0 ? "text-destructive" : p.estoque <= 5 ? "text-amber-600" : "text-muted-foreground")}>
+                    Estoque: {p.estoque}
+                  </Badge>
                 </div>
                 <p className="text-lg font-bold text-primary">{formatBRL(p.preco)}</p>
                 {p.descricao_curta && (
