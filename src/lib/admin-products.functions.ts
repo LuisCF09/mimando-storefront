@@ -12,11 +12,17 @@ const productSchema = z.object({
   imagem_url: z.string().trim().url().max(2048).or(z.literal("")).optional().nullable(),
   disponivel: z.boolean().default(true),
   is_featured: z.boolean().default(false),
+  is_personalizavel: z.boolean().default(false),
+  is_bestseller: z.boolean().default(false),
+  is_novidade: z.boolean().default(false),
+  is_promocao: z.boolean().default(false),
   badge: z.string().trim().max(40).or(z.literal("")).optional().nullable(),
-  estoque: z.number().int().min(0).default(0),
+  estoque: z.number().int().min(0).max(100000).default(0),
+  occasions: z.array(z.string().trim().min(1).max(80)).max(20).default([]),
 });
 
-const SELECT = "id,nome,preco,categoria,descricao_curta,descricao_completa,imagem_url,disponivel,is_featured,badge,created_at,estoque";
+const SELECT =
+  "id,nome,preco,categoria,descricao_curta,descricao_completa,imagem_url,disponivel,is_featured,is_personalizavel,is_bestseller,is_novidade,is_promocao,badge,created_at,estoque";
 
 async function assertAdmin(supabase: any, userId: string) {
   const { data, error } = await supabase
@@ -27,6 +33,15 @@ async function assertAdmin(supabase: any, userId: string) {
     .maybeSingle();
   if (error) throw new Error(error.message);
   if (!data) throw new Error("Acesso restrito à administradora.");
+}
+
+async function setOccasions(supabase: any, productId: string, slugs: string[]) {
+  await supabase.from("product_occasions").delete().eq("product_id", productId);
+  if (slugs.length > 0) {
+    const rows = slugs.map((slug) => ({ product_id: productId, occasion_slug: slug }));
+    const { error } = await supabase.from("product_occasions").insert(rows);
+    if (error) throw new Error(error.message);
+  }
 }
 
 export const getMyRole = createServerFn({ method: "GET" })
@@ -48,10 +63,11 @@ export const createProduct = createServerFn({ method: "POST" })
   .handler(async ({ data, context }) => {
     const { supabase, userId } = context;
     await assertAdmin(supabase, userId);
+    const { occasions, ...rest } = data;
     const payload = {
-      ...data,
-      imagem_url: data.imagem_url || null,
-      badge: data.badge ? data.badge : null,
+      ...rest,
+      imagem_url: rest.imagem_url || null,
+      badge: rest.badge ? rest.badge : null,
     };
     const { data: row, error } = await supabase
       .from("products")
@@ -59,6 +75,7 @@ export const createProduct = createServerFn({ method: "POST" })
       .select("id")
       .single();
     if (error) throw new Error(error.message);
+    await setOccasions(supabase, row!.id as string, occasions);
     return { id: row!.id as string };
   });
 
@@ -68,7 +85,7 @@ export const updateProduct = createServerFn({ method: "POST" })
   .handler(async ({ data, context }) => {
     const { supabase, userId } = context;
     await assertAdmin(supabase, userId);
-    const { id, ...rest } = data;
+    const { id, occasions, ...rest } = data;
     const payload = {
       ...rest,
       imagem_url: rest.imagem_url || null,
@@ -76,6 +93,7 @@ export const updateProduct = createServerFn({ method: "POST" })
     };
     const { error } = await supabase.from("products").update(payload).eq("id", id);
     if (error) throw new Error(error.message);
+    await setOccasions(supabase, id, occasions);
     return { ok: true };
   });
 
@@ -133,16 +151,21 @@ export const adminListProducts = createServerFn({ method: "GET" })
       .order("created_at", { ascending: false });
     if (error) throw new Error(error.message);
     return (data ?? []).map((r: any) => ({
-      id: r.id,
-      nome: r.nome,
+      id: r.id as string,
+      nome: r.nome as string,
       preco: Number(r.preco),
-      categoria: r.categoria,
-      descricao_curta: r.descricao_curta ?? "",
-      descricao_completa: r.descricao_completa ?? "",
-      imagem_url: r.imagem_url ?? null,
+      categoria: r.categoria as string,
+      descricao_curta: (r.descricao_curta ?? "") as string,
+      descricao_completa: (r.descricao_completa ?? "") as string,
+      imagem_url: (r.imagem_url ?? null) as string | null,
       disponivel: !!r.disponivel,
       is_featured: !!r.is_featured,
+      is_personalizavel: !!r.is_personalizavel,
+      is_bestseller: !!r.is_bestseller,
+      is_novidade: !!r.is_novidade,
+      is_promocao: !!r.is_promocao,
       badge: (r.badge ?? null) as string | null,
+      estoque: r.estoque !== null && r.estoque !== undefined ? Number(r.estoque) : 0,
     }));
   });
 
@@ -159,16 +182,26 @@ export const adminGetProduct = createServerFn({ method: "GET" })
       .maybeSingle();
     if (error) throw new Error(error.message);
     if (!row) throw new Error("Produto não encontrado");
+    const { data: occ } = await supabase
+      .from("product_occasions")
+      .select("occasion_slug")
+      .eq("product_id", data.id);
     return {
-      id: row.id,
-      nome: row.nome,
+      id: row.id as string,
+      nome: row.nome as string,
       preco: Number(row.preco),
       categoria: row.categoria as string,
-      descricao_curta: row.descricao_curta ?? "",
-      descricao_completa: row.descricao_completa ?? "",
-      imagem_url: row.imagem_url ?? null,
+      descricao_curta: (row.descricao_curta ?? "") as string,
+      descricao_completa: (row.descricao_completa ?? "") as string,
+      imagem_url: (row.imagem_url ?? null) as string | null,
       disponivel: !!row.disponivel,
       is_featured: !!row.is_featured,
+      is_personalizavel: !!row.is_personalizavel,
+      is_bestseller: !!row.is_bestseller,
+      is_novidade: !!row.is_novidade,
+      is_promocao: !!row.is_promocao,
       badge: (row.badge ?? null) as string | null,
+      estoque: row.estoque !== null && row.estoque !== undefined ? Number(row.estoque) : 0,
+      occasions: (occ ?? []).map((o: any) => o.occasion_slug as string),
     };
   });
