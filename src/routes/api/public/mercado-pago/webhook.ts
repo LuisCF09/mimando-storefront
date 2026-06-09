@@ -32,7 +32,7 @@ export const Route = createFileRoute("/api/public/mercado-pago/webhook")({
           const client = new MercadoPagoConfig({ accessToken });
           const payment = await new Payment(client).get({ id: String(paymentId) });
 
-          const status = payment.status; // approved, pending, rejected, cancelled, refunded, in_process
+          const status = payment.status;
           const orderId =
             (payment.external_reference as string | undefined) ||
             (payment.metadata as any)?.order_id;
@@ -48,6 +48,15 @@ export const Route = createFileRoute("/api/public/mercado-pago/webhook")({
                   : "pending";
 
           const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+
+          // Verifica status anterior para evitar decremento duplicado
+          const { data: prev } = await supabaseAdmin
+            .from("orders")
+            .select("payment_status")
+            .eq("id", orderId)
+            .maybeSingle();
+          const wasAlreadyPaid = prev?.payment_status === "paid";
+
           await supabaseAdmin
             .from("orders")
             .update({
@@ -55,6 +64,28 @@ export const Route = createFileRoute("/api/public/mercado-pago/webhook")({
               mercado_pago_payment_id: String(payment.id),
             })
             .eq("id", orderId);
+
+          // Decrementa estoque uma única vez quando o pedido vira "paid"
+          if (mapped === "paid" && !wasAlreadyPaid) {
+            const { data: items } = await supabaseAdmin
+              .from("order_items")
+              .select("product_id,quantity")
+              .eq("order_id", orderId);
+            for (const it of items ?? []) {
+              if (!it.product_id) continue;
+              const { data: prod } = await supabaseAdmin
+                .from("products")
+                .select("estoque")
+                .eq("id", it.product_id)
+                .maybeSingle();
+              const current = prod?.estoque ?? 0;
+              const next = Math.max(0, Number(current) - Number(it.quantity));
+              await supabaseAdmin
+                .from("products")
+                .update({ estoque: next })
+                .eq("id", it.product_id);
+            }
+          }
 
           return new Response("ok", { status: 200 });
         } catch (err: any) {

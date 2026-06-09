@@ -159,6 +159,7 @@ const checkoutSchema = z.object({
   address_district: z.string().trim().min(2).max(120),
   address_city: z.string().trim().min(2).max(120),
   address_state: z.string().trim().min(2).max(2),
+  cupom_codigo: z.string().trim().max(40).default(""),
 });
 
 export const createCheckoutPreference = createServerFn({ method: "POST" })
@@ -172,29 +173,61 @@ export const createCheckoutPreference = createServerFn({ method: "POST" })
     const ids = data.items.map((i) => i.productId);
     const { data: products, error: pe } = await supabaseAdmin
       .from("products")
-      .select("id,nome,preco,imagem_url,disponivel")
+      .select("id,nome,preco,imagem_url,disponivel,estoque")
       .in("id", ids);
     if (pe) throw new Error(pe.message);
     if (!products || products.length !== ids.length) {
       throw new Error("Algum produto não está mais disponível.");
     }
-    for (const p of products) {
+    for (const ci of data.items) {
+      const p: any = products.find((x: any) => x.id === ci.productId);
       if (!p.disponivel) throw new Error(`O produto "${p.nome}" está indisponível.`);
+      const est = p.estoque !== null && p.estoque !== undefined ? Number(p.estoque) : 0;
+      if (est <= 0) throw new Error(`O produto "${p.nome}" está esgotado.`);
+      if (ci.quantity > est) {
+        throw new Error(`O produto "${p.nome}" tem apenas ${est} unidade(s) em estoque.`);
+      }
     }
 
     const itemsRich = data.items.map((ci) => {
       const p = products.find((x: any) => x.id === ci.productId)!;
-      const price = Number(p.preco);
+      const price = Number((p as any).preco);
       return {
         productId: ci.productId,
-        nome: p.nome,
+        nome: (p as any).nome as string,
         preco: price,
         quantity: ci.quantity,
         subtotal: Number((price * ci.quantity).toFixed(2)),
-        imagem_url: p.imagem_url ?? null,
+        imagem_url: ((p as any).imagem_url ?? null) as string | null,
       };
     });
-    const total = Number(itemsRich.reduce((a, i) => a + i.subtotal, 0).toFixed(2));
+    const subtotal = Number(itemsRich.reduce((a, i) => a + i.subtotal, 0).toFixed(2));
+
+    // Valida cupom no servidor (não confia no cliente)
+    let desconto = 0;
+    let cupomCodigo: string | null = null;
+    if (data.cupom_codigo) {
+      const codigo = data.cupom_codigo.trim().toUpperCase();
+      const { data: cupom } = await supabaseAdmin
+        .from("coupons")
+        .select("codigo,tipo,valor,validade,ativo,min_subtotal")
+        .eq("codigo", codigo)
+        .maybeSingle();
+      if (cupom && cupom.ativo) {
+        const today = new Date().toISOString().slice(0, 10);
+        const valid = !cupom.validade || cupom.validade >= today;
+        const minOk = subtotal >= Number(cupom.min_subtotal ?? 0);
+        if (valid && minOk) {
+          const valor = Number(cupom.valor);
+          desconto =
+            cupom.tipo === "percent"
+              ? Number(((subtotal * valor) / 100).toFixed(2))
+              : Number(Math.min(valor, subtotal).toFixed(2));
+          cupomCodigo = cupom.codigo as string;
+        }
+      }
+    }
+    const total = Math.max(0, Number((subtotal - desconto).toFixed(2)));
 
     // Cria pedido
     const { data: order, error: oe } = await supabase
@@ -214,6 +247,8 @@ export const createCheckoutPreference = createServerFn({ method: "POST" })
         total_price: total,
         payment_status: "pending",
         payment_method: "mercado_pago",
+        cupom_codigo: cupomCodigo,
+        desconto,
       })
       .select("id")
       .single();
@@ -251,17 +286,21 @@ export const createCheckoutPreference = createServerFn({ method: "POST" })
     const client = new MercadoPagoConfig({ accessToken });
     const preference = new Preference(client);
 
+    // Aplica desconto proporcional aos itens para o total bater com Mercado Pago
+    const factor = subtotal > 0 ? total / subtotal : 1;
+    const mpItems = itemsRich.map((i) => ({
+      id: i.productId,
+      title: i.nome,
+      quantity: i.quantity,
+      unit_price: Number((i.preco * factor).toFixed(2)),
+      currency_id: "BRL",
+      picture_url: i.imagem_url ?? undefined,
+    }));
+
     try {
       const created = await preference.create({
         body: {
-          items: itemsRich.map((i) => ({
-            id: i.productId,
-            title: i.nome,
-            quantity: i.quantity,
-            unit_price: i.preco,
-            currency_id: "BRL",
-            picture_url: i.imagem_url ?? undefined,
-          })),
+          items: mpItems,
           payer: {
             name: data.customer_name,
             email: data.customer_email,

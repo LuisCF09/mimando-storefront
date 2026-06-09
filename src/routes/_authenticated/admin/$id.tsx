@@ -49,7 +49,13 @@ function EditarProduto() {
             imagem_url: data.imagem_url ?? "",
             disponivel: data.disponivel,
             is_featured: data.is_featured,
+            is_personalizavel: data.is_personalizavel,
+            is_bestseller: data.is_bestseller,
+            is_novidade: data.is_novidade,
+            is_promocao: data.is_promocao,
             badge: data.badge ?? "",
+            estoque: data.estoque,
+            occasions: data.occasions,
           }}
           onSubmit={async (v) => {
             try {

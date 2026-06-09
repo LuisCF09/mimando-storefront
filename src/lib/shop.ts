@@ -28,6 +28,15 @@ export function isNew(createdAt?: string | null, days = 14): boolean {
   return Date.now() - created < days * 24 * 60 * 60 * 1000;
 }
 
+export function isSoldOut(p: {
+  disponivel: boolean;
+  estoque?: number | null;
+}): boolean {
+  if (!p.disponivel) return true;
+  if (p.estoque !== undefined && p.estoque !== null && p.estoque <= 0) return true;
+  return false;
+}
+
 function waLink(text: string) {
   return `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(text)}`;
 }
@@ -35,6 +44,18 @@ function waLink(text: string) {
 export function whatsappLink(productName: string) {
   return waLink(
     `Olá! Tenho interesse no produto: ${productName}. Poderia me passar mais informações?`,
+  );
+}
+
+export function whatsappPersonalizadoLink(productName: string) {
+  return waLink(
+    `Olá! Tenho interesse em personalizar o produto ${productName} que vi no site Mimando Papelaria Fofa e Presentes Criativos.`,
+  );
+}
+
+export function whatsappConsultarLink(productName: string) {
+  return waLink(
+    `Olá! Gostaria de consultar a disponibilidade do produto ${productName} da Mimando Papelaria.`,
   );
 }
 
@@ -53,3 +74,14 @@ export function whatsappCartLink(items: WhatsAppCartItem[], total: number) {
   const msg = `Olá! Gostaria de finalizar este pedido:\n${lista}\n\nTotal: ${formatBRL(total)}\n\nPoderia me passar as informações para pagamento via Pix?`;
   return waLink(msg);
 }
+
+export const OCCASIONS_FALLBACK = [
+  { slug: "aniversario", nome: "Aniversário" },
+  { slug: "dia-dos-namorados", nome: "Dia dos Namorados" },
+  { slug: "amiga-especial", nome: "Amiga especial" },
+  { slug: "professores", nome: "Professores" },
+  { slug: "mae", nome: "Mãe" },
+  { slug: "pai", nome: "Pai" },
+  { slug: "natal", nome: "Natal" },
+  { slug: "volta-as-aulas", nome: "Volta às aulas" },
+] as const;

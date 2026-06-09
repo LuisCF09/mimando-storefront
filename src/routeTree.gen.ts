@@ -21,6 +21,7 @@ import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as ProdutosIdRouteImport } from './routes/produtos.$id'
+import { Route as OcasioesSlugRouteImport } from './routes/ocasioes.$slug'
 import { Route as AuthenticatedMeusPedidosRouteImport } from './routes/_authenticated/meus-pedidos'
 import { Route as AuthenticatedFavoritosRouteImport } from './routes/_authenticated/favoritos'
 import { Route as AuthenticatedContaRouteImport } from './routes/_authenticated/conta'
@@ -33,6 +34,8 @@ import { Route as AuthenticatedCheckoutPendenteRouteImport } from './routes/_aut
 import { Route as AuthenticatedCheckoutFalhaRouteImport } from './routes/_authenticated/checkout/falha'
 import { Route as AuthenticatedAdminPedidosRouteImport } from './routes/_authenticated/admin/pedidos'
 import { Route as AuthenticatedAdminNovoRouteImport } from './routes/_authenticated/admin/novo'
+import { Route as AuthenticatedAdminCuponsRouteImport } from './routes/_authenticated/admin/cupons'
+import { Route as AuthenticatedAdminBannerRouteImport } from './routes/_authenticated/admin/banner'
 import { Route as AuthenticatedAdminAvaliacoesRouteImport } from './routes/_authenticated/admin/avaliacoes'
 import { Route as AuthenticatedAdminIdRouteImport } from './routes/_authenticated/admin/$id'
 import { Route as ApiPublicMercadoPagoWebhookRouteImport } from './routes/api/public/mercado-pago/webhook'
@@ -95,6 +98,11 @@ const ProdutosIdRoute = ProdutosIdRouteImport.update({
   id: '/$id',
   path: '/$id',
   getParentRoute: () => ProdutosRoute,
+} as any)
+const OcasioesSlugRoute = OcasioesSlugRouteImport.update({
+  id: '/ocasioes/$slug',
+  path: '/ocasioes/$slug',
+  getParentRoute: () => rootRouteImport,
 } as any)
 const AuthenticatedMeusPedidosRoute =
   AuthenticatedMeusPedidosRouteImport.update({
@@ -162,6 +170,18 @@ const AuthenticatedAdminNovoRoute = AuthenticatedAdminNovoRouteImport.update({
   path: '/novo',
   getParentRoute: () => AuthenticatedAdminRouteRoute,
 } as any)
+const AuthenticatedAdminCuponsRoute =
+  AuthenticatedAdminCuponsRouteImport.update({
+    id: '/cupons',
+    path: '/cupons',
+    getParentRoute: () => AuthenticatedAdminRouteRoute,
+  } as any)
+const AuthenticatedAdminBannerRoute =
+  AuthenticatedAdminBannerRouteImport.update({
+    id: '/banner',
+    path: '/banner',
+    getParentRoute: () => AuthenticatedAdminRouteRoute,
+  } as any)
 const AuthenticatedAdminAvaliacoesRoute =
   AuthenticatedAdminAvaliacoesRouteImport.update({
     id: '/avaliacoes',
@@ -196,9 +216,12 @@ export interface FileRoutesByFullPath {
   '/conta': typeof AuthenticatedContaRoute
   '/favoritos': typeof AuthenticatedFavoritosRoute
   '/meus-pedidos': typeof AuthenticatedMeusPedidosRoute
+  '/ocasioes/$slug': typeof OcasioesSlugRoute
   '/produtos/$id': typeof ProdutosIdRoute
   '/admin/$id': typeof AuthenticatedAdminIdRoute
   '/admin/avaliacoes': typeof AuthenticatedAdminAvaliacoesRoute
+  '/admin/banner': typeof AuthenticatedAdminBannerRoute
+  '/admin/cupons': typeof AuthenticatedAdminCuponsRoute
   '/admin/novo': typeof AuthenticatedAdminNovoRoute
   '/admin/pedidos': typeof AuthenticatedAdminPedidosRoute
   '/checkout/falha': typeof AuthenticatedCheckoutFalhaRoute
@@ -223,9 +246,12 @@ export interface FileRoutesByTo {
   '/conta': typeof AuthenticatedContaRoute
   '/favoritos': typeof AuthenticatedFavoritosRoute
   '/meus-pedidos': typeof AuthenticatedMeusPedidosRoute
+  '/ocasioes/$slug': typeof OcasioesSlugRoute
   '/produtos/$id': typeof ProdutosIdRoute
   '/admin/$id': typeof AuthenticatedAdminIdRoute
   '/admin/avaliacoes': typeof AuthenticatedAdminAvaliacoesRoute
+  '/admin/banner': typeof AuthenticatedAdminBannerRoute
+  '/admin/cupons': typeof AuthenticatedAdminCuponsRoute
   '/admin/novo': typeof AuthenticatedAdminNovoRoute
   '/admin/pedidos': typeof AuthenticatedAdminPedidosRoute
   '/checkout/falha': typeof AuthenticatedCheckoutFalhaRoute
@@ -253,9 +279,12 @@ export interface FileRoutesById {
   '/_authenticated/conta': typeof AuthenticatedContaRoute
   '/_authenticated/favoritos': typeof AuthenticatedFavoritosRoute
   '/_authenticated/meus-pedidos': typeof AuthenticatedMeusPedidosRoute
+  '/ocasioes/$slug': typeof OcasioesSlugRoute
   '/produtos/$id': typeof ProdutosIdRoute
   '/_authenticated/admin/$id': typeof AuthenticatedAdminIdRoute
   '/_authenticated/admin/avaliacoes': typeof AuthenticatedAdminAvaliacoesRoute
+  '/_authenticated/admin/banner': typeof AuthenticatedAdminBannerRoute
+  '/_authenticated/admin/cupons': typeof AuthenticatedAdminCuponsRoute
   '/_authenticated/admin/novo': typeof AuthenticatedAdminNovoRoute
   '/_authenticated/admin/pedidos': typeof AuthenticatedAdminPedidosRoute
   '/_authenticated/checkout/falha': typeof AuthenticatedCheckoutFalhaRoute
@@ -283,9 +312,12 @@ export interface FileRouteTypes {
     | '/conta'
     | '/favoritos'
     | '/meus-pedidos'
+    | '/ocasioes/$slug'
     | '/produtos/$id'
     | '/admin/$id'
     | '/admin/avaliacoes'
+    | '/admin/banner'
+    | '/admin/cupons'
     | '/admin/novo'
     | '/admin/pedidos'
     | '/checkout/falha'
@@ -310,9 +342,12 @@ export interface FileRouteTypes {
     | '/conta'
     | '/favoritos'
     | '/meus-pedidos'
+    | '/ocasioes/$slug'
     | '/produtos/$id'
     | '/admin/$id'
     | '/admin/avaliacoes'
+    | '/admin/banner'
+    | '/admin/cupons'
     | '/admin/novo'
     | '/admin/pedidos'
     | '/checkout/falha'
@@ -339,9 +374,12 @@ export interface FileRouteTypes {
     | '/_authenticated/conta'
     | '/_authenticated/favoritos'
     | '/_authenticated/meus-pedidos'
+    | '/ocasioes/$slug'
     | '/produtos/$id'
     | '/_authenticated/admin/$id'
     | '/_authenticated/admin/avaliacoes'
+    | '/_authenticated/admin/banner'
+    | '/_authenticated/admin/cupons'
     | '/_authenticated/admin/novo'
     | '/_authenticated/admin/pedidos'
     | '/_authenticated/checkout/falha'
@@ -364,6 +402,7 @@ export interface RootRouteChildren {
   ResetPasswordRoute: typeof ResetPasswordRoute
   SobreRoute: typeof SobreRoute
   TermosRoute: typeof TermosRoute
+  OcasioesSlugRoute: typeof OcasioesSlugRoute
   ApiPublicMercadoPagoWebhookRoute: typeof ApiPublicMercadoPagoWebhookRoute
 }
 
@@ -453,6 +492,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ProdutosIdRouteImport
       parentRoute: typeof ProdutosRoute
     }
+    '/ocasioes/$slug': {
+      id: '/ocasioes/$slug'
+      path: '/ocasioes/$slug'
+      fullPath: '/ocasioes/$slug'
+      preLoaderRoute: typeof OcasioesSlugRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/_authenticated/meus-pedidos': {
       id: '/_authenticated/meus-pedidos'
       path: '/meus-pedidos'
@@ -537,6 +583,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAdminNovoRouteImport
       parentRoute: typeof AuthenticatedAdminRouteRoute
     }
+    '/_authenticated/admin/cupons': {
+      id: '/_authenticated/admin/cupons'
+      path: '/cupons'
+      fullPath: '/admin/cupons'
+      preLoaderRoute: typeof AuthenticatedAdminCuponsRouteImport
+      parentRoute: typeof AuthenticatedAdminRouteRoute
+    }
+    '/_authenticated/admin/banner': {
+      id: '/_authenticated/admin/banner'
+      path: '/banner'
+      fullPath: '/admin/banner'
+      preLoaderRoute: typeof AuthenticatedAdminBannerRouteImport
+      parentRoute: typeof AuthenticatedAdminRouteRoute
+    }
     '/_authenticated/admin/avaliacoes': {
       id: '/_authenticated/admin/avaliacoes'
       path: '/avaliacoes'
@@ -564,6 +624,8 @@ declare module '@tanstack/react-router' {
 interface AuthenticatedAdminRouteRouteChildren {
   AuthenticatedAdminIdRoute: typeof AuthenticatedAdminIdRoute
   AuthenticatedAdminAvaliacoesRoute: typeof AuthenticatedAdminAvaliacoesRoute
+  AuthenticatedAdminBannerRoute: typeof AuthenticatedAdminBannerRoute
+  AuthenticatedAdminCuponsRoute: typeof AuthenticatedAdminCuponsRoute
   AuthenticatedAdminNovoRoute: typeof AuthenticatedAdminNovoRoute
   AuthenticatedAdminPedidosRoute: typeof AuthenticatedAdminPedidosRoute
   AuthenticatedAdminIndexRoute: typeof AuthenticatedAdminIndexRoute
@@ -573,6 +635,8 @@ const AuthenticatedAdminRouteRouteChildren: AuthenticatedAdminRouteRouteChildren
   {
     AuthenticatedAdminIdRoute: AuthenticatedAdminIdRoute,
     AuthenticatedAdminAvaliacoesRoute: AuthenticatedAdminAvaliacoesRoute,
+    AuthenticatedAdminBannerRoute: AuthenticatedAdminBannerRoute,
+    AuthenticatedAdminCuponsRoute: AuthenticatedAdminCuponsRoute,
     AuthenticatedAdminNovoRoute: AuthenticatedAdminNovoRoute,
     AuthenticatedAdminPedidosRoute: AuthenticatedAdminPedidosRoute,
     AuthenticatedAdminIndexRoute: AuthenticatedAdminIndexRoute,
@@ -634,18 +698,9 @@ const rootRouteChildren: RootRouteChildren = {
   ResetPasswordRoute: ResetPasswordRoute,
   SobreRoute: SobreRoute,
   TermosRoute: TermosRoute,
+  OcasioesSlugRoute: OcasioesSlugRoute,
   ApiPublicMercadoPagoWebhookRoute: ApiPublicMercadoPagoWebhookRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}

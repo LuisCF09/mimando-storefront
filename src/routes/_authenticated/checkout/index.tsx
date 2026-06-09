@@ -31,7 +31,7 @@ const schema = z.object({
 });
 
 function CheckoutPage() {
-  const { items, total, clear } = useCart();
+  const { items, subtotal, total, coupon, clear } = useCart();
   const router = useRouter();
   const createFn = useServerFn(createCheckoutPreference);
   const [loading, setLoading] = useState(false);
@@ -77,6 +77,7 @@ function CheckoutPage() {
           ...parsed.data,
           address_complement: parsed.data.address_complement ?? "",
           items: items.map((i) => ({ productId: i.productId, quantity: i.quantity })),
+          cupom_codigo: coupon?.codigo ?? "",
         },
       });
       if (!res.configured) {
@@ -175,14 +176,24 @@ function CheckoutPage() {
           <ul className="mt-4 space-y-3 text-sm">
             {items.map((i) => (
               <li key={i.productId} className="flex justify-between gap-3">
-                <span className="truncate">
-                  {i.quantity}× {i.nome}
-                </span>
+                <span className="truncate">{i.quantity}× {i.nome}</span>
                 <span className="font-medium">{formatBRL(i.preco * i.quantity)}</span>
               </li>
             ))}
           </ul>
-          <div className="mt-4 flex items-center justify-between border-t pt-4">
+          <div className="mt-4 space-y-1 border-t pt-3 text-sm">
+            <div className="flex items-center justify-between text-muted-foreground">
+              <span>Subtotal</span>
+              <span>{formatBRL(subtotal)}</span>
+            </div>
+            {coupon && (
+              <div className="flex items-center justify-between text-primary">
+                <span>Cupom {coupon.codigo}</span>
+                <span>−{formatBRL(coupon.desconto)}</span>
+              </div>
+            )}
+          </div>
+          <div className="mt-2 flex items-center justify-between border-t pt-3">
             <span>Total</span>
             <span className="text-xl font-bold text-primary">{formatBRL(total)}</span>
           </div>

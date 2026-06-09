@@ -1,56 +1,93 @@
+# Sprint Extra — Melhorias para o lançamento
 
-# Plano — Finalização do Sprint 3
+Mantemos a regra: loja exclusiva da Mimando, só a admin cria/edita produtos. Nada de marketplace.
 
-## 1. Publicação
-- Abrir o diálogo de publicação para o site entrar no ar com as novidades (favoritos, avaliações, /sobre, /politicas, /contato).
-- Após publicar, conferir a URL `*.lovable.app` carregando home, `/produtos`, `/favoritos`, `/sobre`, `/politicas`.
+## 1. Banner editável da home
 
-## 2. Validação das rotas
-- `/favoritos` (rota protegida em `_authenticated/favoritos`): confirmar redirecionamento para `/auth` quando deslogado e listagem correta quando logado.
-- `/sobre` e `/politicas`: páginas públicas — checar SSR, title/description e links do header/footer.
-- Smoke test rápido via `invoke-server-function` em rotas SSR para garantir 200.
+- Nova tabela `site_settings` (singleton, chave `home_banner`) com: `titulo`, `subtitulo`, `botao_texto`, `botao_link`, `imagem_url`, `updated_at`.
+- Server fns: `getHomeBanner` (público) e `updateHomeBanner` (admin).
+- Página `/admin/banner` no painel: form com pré‑visualização e upload via URL de imagem (mantendo o padrão atual de produtos).
+- `src/routes/index.tsx` passa a ler o banner do banco em vez do texto fixo (fallback para os textos atuais se vazio).
 
-## 3. Validação de RLS (somente leitura no banco)
-Verificar via `supabase--read_query` em `pg_policies` que:
-- `products`: SELECT público, INSERT/UPDATE/DELETE somente `has_role(auth.uid(),'admin')`.
-- `reviews`: SELECT público, INSERT/UPDATE/DELETE restritos a `auth.uid() = user_id` (cliente só mexe na própria) e admin pode moderar.
-- `favorites`: tudo restrito a `auth.uid() = user_id`.
-- `contact_messages`: INSERT público, SELECT só admin.
-Se alguma policy estiver frouxa, abrir migration corretiva no momento (sem alterar nada que já esteja correto).
+## 2. Cupons de desconto
 
-## 4. Selos nos cards do catálogo e favoritos
-Hoje os selos `FeaturedBadge`, `SoldOutBadge` e `CustomBadge` já existem e aparecem em `/favoritos` e na página de detalhe, mas o card de `/produtos` mostra apenas “Esgotado”. Adicionar selo **Novo** (produtos com `created_at` nos últimos 14 dias), **Destaque** (`is_featured`) e **Esgotado** (`!disponivel`) também em:
-- `src/routes/produtos.tsx` (grid de cards)
-- `src/routes/index.tsx` (seção “Produtos em destaque”)
-- Garantir consistência com `/favoritos` (já usa os três).
+- Tabela `coupons`: `codigo` (único, upper), `tipo` (`percent` | `fixed`), `valor` (numeric), `validade` (date null = sem validade), `ativo` (bool), `min_subtotal` (opcional).
+- RLS: SELECT público apenas via server fn (admin elevado); INSERT/UPDATE/DELETE só admin.
+- Server fns:
+  - `validateCoupon({ codigo, subtotal })` → retorna `{ valido, desconto, motivo }`.
+  - CRUD admin: `listCoupons`, `createCoupon`, `updateCoupon`, `deleteCoupon`, `toggleCoupon`.
+- Painel: `/admin/cupons` com tabela + form (criar/editar/ativar/desativar).
+- Carrinho (`/_authenticated/carrinho`): input “Cupom de desconto” → aplica via `validateCoupon`, mostra linha de desconto e novo total. Cupom guardado no estado do carrinho.
+- Checkout: persiste `cupom_codigo` e `desconto` no pedido (adiciona colunas em `orders`).
 
-Implementação:
-- Criar `NewBadge` em `src/components/ProductBadges.tsx` (ícone Sparkle/Tag com cor accent).
-- Helper `isNew(createdAt)` em `src/lib/shop.ts` (`< 14 dias`).
-- Expor `created_at` no `Product` type e no SELECT de `products.functions.ts` (já incluído no SELECT, falta no tipo/map).
-- Renderizar pilha de badges no canto superior esquerdo dos cards, mesma diagramação do `/favoritos`.
+## 3. Controle de estoque
 
-## 5. Resumo e média clicável nas avaliações
-Em `src/components/ReviewsSection.tsx`:
-- Manter o cabeçalho com média + total, mas transformá-lo em **resumo visual fixo no topo**:
-  - Nota grande (ex.: `4.7`), estrelas grandes (24px), e total “(12 avaliações)”.
-  - Distribuição por estrelas (5→1) com barrinhas de proporção (sem libs novas — divs com largura `%`).
-- Tornar a média **clicável**: ao clicar, faz scroll suave para a lista de avaliações (anchor `#lista-avaliacoes`) e foca o primeiro item.
-- Quando não houver avaliações, mostrar estado vazio amigável no lugar do resumo.
+- A coluna `estoque` já existe em `products`. Vamos:
+  - Exibir e editar `estoque` no `ProductForm` (input numérico).
+  - Quando `estoque <= 0`, tratar como esgotado independente de `disponivel`.
+  - Atualizar `isSoldOut(p)` em `src/lib/shop.ts` (helper único usado em cards, detalhe, favoritos).
+  - Cards e página de detalhe: bloqueiam botão “Adicionar ao carrinho” quando esgotado e trocam o texto do WhatsApp para “Consultar disponibilidade” (mensagem específica).
+  - Decrementar estoque ao concluir pedido aprovado (no fluxo atual de webhook do Mercado Pago, dentro de transação simples por item).
+
+## 4. Produto personalizável
+
+- Nova coluna `is_personalizavel boolean default false` em `products`.
+- Form admin: checkbox “Produto personalizável”.
+- `ProductBadges`: novo `PersonalizavelBadge` (rosa/lilás).
+- Página de detalhe: aviso destacado + botão WhatsApp com mensagem pronta:
+  > “Olá! Tenho interesse em personalizar o produto [nome] que vi no site Mimando Papelaria Fofa e Presentes Criativos.”
+- Helper `whatsappPersonalizadoLink(nome)` em `src/lib/shop.ts`.
+
+## 5. Selos extras e “Mais queridinhos da loja”
+
+- Novas colunas em `products`: `is_bestseller`, `is_novidade`, `is_promocao` (bool). Mantemos `is_featured` (Destaque) e `badge` custom.
+- Form admin: switches para cada selo.
+- Componentes em `ProductBadges.tsx`: `BestsellerBadge`, `NovidadeBadge`, `PromocaoBadge` (+ os já existentes).
+- Home: nova seção **“Mais queridinhos da loja”** entre Destaques e Categorias, listando `is_bestseller = true` (server fn `listBestsellers`).
+- Selos aparecem em cards (catálogo, home, favoritos) e na página de detalhe, com prioridade visual: Esgotado > Promoção > Destaque > Mais vendido > Novidade/Novo > Personalizável > custom.
+
+## 6. Presentes por ocasião
+
+- Nova tabela `occasions` (`slug`, `nome`, `ordem`) — seed: Aniversário, Dia dos Namorados, Amiga especial, Professores, Mãe, Pai, Natal, Volta às aulas.
+- Tabela de junção `product_occasions` (`product_id`, `occasion_slug`).
+- Server fns: `listOccasions`, `listProductsByOccasion(slug)`, e admin `setProductOccasions(productId, slugs[])`.
+- Form admin: grupo de checkboxes “Ocasiões”.
+- Home: seção **“Escolha por ocasião”** com cards/chips coloridos linkando para `/ocasioes/$slug`.
+- Nova rota `src/routes/ocasioes.$slug.tsx` listando produtos da ocasião (mesmo grid do catálogo).
+- Catálogo `/produtos`: novo filtro “Ocasião” (select) que usa o mesmo server fn.
+
+## 7. Painel admin — atualizações
+
+Sidebar/cabeçalho do `/admin` ganha atalhos: **Banner**, **Cupons**, **Avaliações**, **Pedidos**, **Adicionar produto**. Lista de produtos passa a mostrar estoque e ícones dos novos selos.
 
 ## Detalhes técnicos
-- Nenhum schema novo necessário; reaproveita `reviews`, `products.created_at`, `is_featured`, `disponivel`, `badge`.
-- Sem alteração de conceito: continua loja própria, admin-only para produtos/moderação.
-- Sem novas dependências.
 
-## Arquivos a editar
-- `src/components/ProductBadges.tsx` (novo `NewBadge`)
-- `src/lib/shop.ts` (helper `isNew`)
-- `src/lib/products.functions.ts` (incluir `created_at` no tipo `Product` e no `mapRow`)
-- `src/routes/produtos.tsx` (badges no card)
-- `src/routes/index.tsx` (badges na seção destaque)
-- `src/routes/_authenticated/favoritos.tsx` (adicionar `NewBadge` para consistência)
-- `src/components/ReviewsSection.tsx` (resumo + média clicável + distribuição)
+- Migrações (uma migration única):
+  - `ALTER TABLE products ADD COLUMN is_personalizavel/is_bestseller/is_novidade/is_promocao bool default false`.
+  - `CREATE TABLE site_settings`, `coupons`, `occasions`, `product_occasions` + GRANTs + RLS (leitura pública para `site_settings`/`occasions`/`product_occasions`; escrita só admin via `has_role`). `coupons` sem leitura pública.
+  - `ALTER TABLE orders ADD COLUMN cupom_codigo text, desconto numeric default 0`.
+  - Seed das ocasiões.
+- Arquivos novos:
+  - `src/lib/site-settings.functions.ts`
+  - `src/lib/coupons.functions.ts`
+  - `src/lib/occasions.functions.ts`
+  - `src/routes/_authenticated/admin/banner.tsx`
+  - `src/routes/_authenticated/admin/cupons.tsx`
+  - `src/routes/ocasioes.$slug.tsx`
+  - Componentes: novos badges, `CouponInput.tsx`, `OccasionPicker.tsx`.
+- Arquivos editados:
+  - `src/lib/shop.ts` (helpers de estoque, WhatsApp personalizado, lista de ocasiões).
+  - `src/lib/products.functions.ts` e `admin-products.functions.ts` (novas colunas + ocasiões + `listBestsellers`).
+  - `src/components/ProductForm.tsx`, `ProductBadges.tsx`.
+  - `src/routes/index.tsx` (banner dinâmico + Mais queridinhos + Ocasiões).
+  - `src/routes/produtos.tsx` e `produtos.$id.tsx` (selos, estoque, personalizável, filtro de ocasião).
+  - `src/routes/_authenticated/carrinho.tsx` e `checkout/index.tsx` (cupom + desconto).
+  - `src/routes/_authenticated/admin/index.tsx` (atalhos + estoque na lista).
+  - `src/routes/_authenticated/favoritos.tsx` (novos selos).
+  - Webhook Mercado Pago: decremento de estoque.
 
-## Fora do escopo
-- Marketplace, múltiplos vendedores, mudança de paleta/layout, novo gateway de pagamento.
+## Fora de escopo
+
+- Upload nativo de imagens (continua por URL). Posso adicionar storage bucket num próximo sprint se quiser.
+- Cupom de “frete grátis” real (sem cálculo de frete no projeto). Tratamos `FRETEGRATIS` como cupom de valor fixo configurável.
+- Marketplace, múltiplos vendedores, painel de vendedor — explicitamente excluído.

@@ -1,8 +1,9 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { queryOptions, useSuspenseQuery } from "@tanstack/react-query";
+import { queryOptions, useSuspenseQuery, useQuery } from "@tanstack/react-query";
 import { useMemo, useState } from "react";
 import { listProducts, type Product } from "@/lib/products.functions";
-import { CATEGORIES, formatBRL, isNew, whatsappLink } from "@/lib/shop";
+import { listOccasions } from "@/lib/occasions.functions";
+import { CATEGORIES, formatBRL, isNew, isSoldOut, whatsappLink } from "@/lib/shop";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -11,7 +12,7 @@ import { ImageOff, MessageCircle, PackageOpen, Search, ShoppingCart } from "luci
 import { useCart } from "@/lib/cart";
 import { toast } from "sonner";
 import { FavoriteButton } from "@/components/FavoriteButton";
-import { CustomBadge, FeaturedBadge, NewBadge, SoldOutBadge } from "@/components/ProductBadges";
+import { ProductBadgeStack } from "@/components/ProductBadges";
 
 const productsQuery = queryOptions({
   queryKey: ["products", "all"],
@@ -22,10 +23,7 @@ export const Route = createFileRoute("/produtos")({
   head: () => ({
     meta: [
       { title: "Produtos — Mimando Papelaria" },
-      {
-        name: "description",
-        content: "Veja todos os produtos fofos e criativos disponíveis na Mimando Papelaria.",
-      },
+      { name: "description", content: "Veja todos os produtos fofos e criativos disponíveis na Mimando Papelaria." },
       { property: "og:title", content: "Catálogo — Mimando Papelaria" },
       { property: "og:description", content: "Produtos fofos, criativos e personalizados." },
     ],
@@ -44,15 +42,28 @@ type SortMode = "recent" | "price_asc" | "price_desc";
 
 function ProductsPage() {
   const { data: products } = useSuspenseQuery(productsQuery);
+  const { data: occasions } = useQuery({ queryKey: ["occasions"], queryFn: () => listOccasions() });
   const [filter, setFilter] = useState<string | null>(null);
+  const [occasion, setOccasion] = useState<string>("");
   const [searchQuery, setSearchQuery] = useState<string>("");
   const [sort, setSort] = useState<SortMode>("recent");
   const [onlyAvailable, setOnlyAvailable] = useState(false);
   const [onlyFeatured, setOnlyFeatured] = useState(false);
 
+  // We don't refetch per occasion to keep filtering instant; instead filter client-side
+  // by reading product.occasions if present. As products are loaded without occasions,
+  // we fetch a separate list when occasion is selected.
+  const { data: occasionProducts } = useQuery({
+    queryKey: ["products", "occasion", occasion],
+    queryFn: () => listProducts({ data: { occasion } }),
+    enabled: occasion !== "",
+  });
+
+  const baseList: Product[] = occasion ? occasionProducts ?? [] : products;
+
   const filtered = useMemo(() => {
     const q = searchQuery.trim().toLowerCase();
-    let out = products
+    let out = baseList
       .filter((p) => (filter ? p.categoria === filter : true))
       .filter((p) => {
         if (!q) return true;
@@ -63,21 +74,19 @@ function ProductsPage() {
           (p.descricao_completa ?? "").toLowerCase().includes(q)
         );
       })
-      .filter((p) => (onlyAvailable ? p.disponivel : true))
+      .filter((p) => (onlyAvailable ? !isSoldOut(p) : true))
       .filter((p) => (onlyFeatured ? p.is_featured : true));
 
     if (sort === "price_asc") out = [...out].sort((a, b) => a.preco - b.preco);
     else if (sort === "price_desc") out = [...out].sort((a, b) => b.preco - a.preco);
     return out;
-  }, [products, filter, searchQuery, onlyAvailable, onlyFeatured, sort]);
+  }, [baseList, filter, searchQuery, onlyAvailable, onlyFeatured, sort]);
 
   return (
     <div className="container mx-auto px-4 py-10">
       <div className="mb-8 text-center">
         <h1 className="text-3xl font-bold sm:text-4xl">Nossos produtos</h1>
-        <p className="mt-2 text-muted-foreground">
-          Escolha o seu favorito, compre pelo site ou chame no WhatsApp.
-        </p>
+        <p className="mt-2 text-muted-foreground">Escolha o seu favorito, compre pelo site ou chame no WhatsApp.</p>
       </div>
 
       <div className="mx-auto mb-6 max-w-md">
@@ -97,13 +106,24 @@ function ProductsPage() {
       <div className="mb-4 flex flex-wrap justify-center gap-2">
         <FilterChip active={filter === null} onClick={() => setFilter(null)}>Todos</FilterChip>
         {CATEGORIES.map((c) => (
-          <FilterChip key={c} active={filter === c} onClick={() => setFilter(c)}>
-            {c}
-          </FilterChip>
+          <FilterChip key={c} active={filter === c} onClick={() => setFilter(c)}>{c}</FilterChip>
         ))}
       </div>
 
       <div className="mb-8 flex flex-wrap items-center justify-center gap-3 text-sm">
+        <label className="flex items-center gap-2">
+          <span className="text-muted-foreground">Ocasião:</span>
+          <select
+            value={occasion}
+            onChange={(e) => setOccasion(e.target.value)}
+            className="rounded-full border border-input bg-card px-3 py-1.5"
+          >
+            <option value="">Todas</option>
+            {(occasions ?? []).map((o) => (
+              <option key={o.slug} value={o.slug}>{o.nome}</option>
+            ))}
+          </select>
+        </label>
         <label className="flex items-center gap-2">
           <span className="text-muted-foreground">Ordenar:</span>
           <select
@@ -116,36 +136,22 @@ function ProductsPage() {
             <option value="price_desc">Preço: maior para menor</option>
           </select>
         </label>
-        <FilterChip active={onlyAvailable} onClick={() => setOnlyAvailable((v) => !v)}>
-          Disponíveis
-        </FilterChip>
-        <FilterChip active={onlyFeatured} onClick={() => setOnlyFeatured((v) => !v)}>
-          Em destaque
-        </FilterChip>
+        <FilterChip active={onlyAvailable} onClick={() => setOnlyAvailable((v) => !v)}>Disponíveis</FilterChip>
+        <FilterChip active={onlyFeatured} onClick={() => setOnlyFeatured((v) => !v)}>Em destaque</FilterChip>
       </div>
 
       {filtered.length === 0 ? (
-        <EmptyState all={products.length === 0} hasSearch={searchQuery.trim().length > 0} />
+        <EmptyState all={baseList.length === 0} hasSearch={searchQuery.trim().length > 0} />
       ) : (
         <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-          {filtered.map((p) => (
-            <ProductCard key={p.id} p={p} />
-          ))}
+          {filtered.map((p) => <ProductCard key={p.id} p={p} />)}
         </div>
       )}
     </div>
   );
 }
 
-function FilterChip({
-  active,
-  onClick,
-  children,
-}: {
-  active: boolean;
-  onClick: () => void;
-  children: React.ReactNode;
-}) {
+function FilterChip({ active, onClick, children }: { active: boolean; onClick: () => void; children: React.ReactNode }) {
   return (
     <button
       type="button"
@@ -164,47 +170,43 @@ function FilterChip({
 
 function ProductCard({ p }: { p: Product }) {
   const { addItem } = useCart();
-  const esgotado = !p.disponivel;
+  const esgotado = isSoldOut(p);
   return (
     <Card className="group relative flex flex-col overflow-hidden rounded-3xl border-border/60 shadow-card transition duration-300 hover:-translate-y-1 hover:shadow-soft">
       <FavoriteButton productId={p.id} />
       <Link to="/produtos/$id" params={{ id: p.id }}>
         <div className="relative aspect-square overflow-hidden bg-secondary/50">
           {p.imagem_url ? (
-            <img
-              src={p.imagem_url}
-              alt={p.nome}
-              loading="lazy"
-              className={
-                "h-full w-full object-cover transition duration-500 group-hover:scale-105 " +
-                (esgotado ? "opacity-60" : "")
-              }
-            />
+            <img src={p.imagem_url} alt={p.nome} loading="lazy"
+              className={"h-full w-full object-cover transition duration-500 group-hover:scale-105 " + (esgotado ? "opacity-60" : "")} />
           ) : (
             <div className="grid h-full place-items-center text-muted-foreground">
               <ImageOff className="h-10 w-10" />
             </div>
           )}
-          <div className="absolute left-3 top-3 flex flex-col items-start gap-1">
-            {esgotado && <SoldOutBadge />}
-            {p.is_featured && !esgotado && <FeaturedBadge />}
-            {isNew(p.created_at) && !esgotado && <NewBadge />}
-            {p.badge && <CustomBadge label={p.badge} />}
-          </div>
+          <ProductBadgeStack
+            esgotado={esgotado}
+            promocao={p.is_promocao}
+            destaque={p.is_featured}
+            bestseller={p.is_bestseller}
+            novidade={p.is_novidade}
+            novo={isNew(p.created_at)}
+            personalizavel={p.is_personalizavel}
+            custom={p.badge}
+          />
         </div>
       </Link>
       <CardContent className="flex flex-1 flex-col space-y-2 p-4">
-        <Badge variant="secondary" className="w-fit rounded-full font-normal">
-          {p.categoria}
-        </Badge>
+        <Badge variant="secondary" className="w-fit rounded-full font-normal">{p.categoria}</Badge>
         <Link to="/produtos/$id" params={{ id: p.id }} className="hover:text-primary">
           <h3 className="line-clamp-1 font-semibold">{p.nome}</h3>
         </Link>
-        {p.descricao_curta && (
-          <p className="line-clamp-2 text-sm text-muted-foreground">{p.descricao_curta}</p>
-        )}
+        {p.descricao_curta && <p className="line-clamp-2 text-sm text-muted-foreground">{p.descricao_curta}</p>}
         <div className="flex items-center justify-between pt-1">
           <span className="text-lg font-bold text-primary">{formatBRL(p.preco)}</span>
+          {p.estoque > 0 && p.estoque <= 5 && !esgotado && (
+            <span className="text-xs text-amber-600">Últimas {p.estoque} unidades</span>
+          )}
         </div>
         <div className="mt-auto flex flex-col gap-2 pt-2">
           <Button
@@ -238,19 +240,8 @@ function EmptyState({ all, hasSearch = false }: { all: boolean; hasSearch?: bool
     <div className="mx-auto max-w-lg rounded-3xl bg-card/80 p-10 text-center shadow-card">
       <PackageOpen className="mx-auto h-10 w-10 text-primary" />
       <h2 className="mt-3 text-lg font-semibold">
-        {all
-          ? "Nenhum produto cadastrado ainda."
-          : hasSearch
-            ? "Nenhum produto encontrado para sua busca."
-            : "Nenhum produto encontrado com esses filtros."}
+        {all ? "Nenhum produto cadastrado ainda." : hasSearch ? "Nenhum produto encontrado para sua busca." : "Nenhum produto encontrado com esses filtros."}
       </h2>
-      <p className="mt-1 text-sm text-muted-foreground">
-        {all
-          ? "A loja está preparando novidades fofas para você. Volte em breve!"
-          : hasSearch
-            ? "Tente outro termo ou remova os filtros."
-            : "Tente ajustar os filtros acima."}
-      </p>
     </div>
   );
 }
