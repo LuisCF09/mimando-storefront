@@ -286,17 +286,21 @@ export const createCheckoutPreference = createServerFn({ method: "POST" })
     const client = new MercadoPagoConfig({ accessToken });
     const preference = new Preference(client);
 
+    // Aplica desconto proporcional aos itens para o total bater com Mercado Pago
+    const factor = subtotal > 0 ? total / subtotal : 1;
+    const mpItems = itemsRich.map((i) => ({
+      id: i.productId,
+      title: i.nome,
+      quantity: i.quantity,
+      unit_price: Number((i.preco * factor).toFixed(2)),
+      currency_id: "BRL",
+      picture_url: i.imagem_url ?? undefined,
+    }));
+
     try {
       const created = await preference.create({
         body: {
-          items: itemsRich.map((i) => ({
-            id: i.productId,
-            title: i.nome,
-            quantity: i.quantity,
-            unit_price: i.preco,
-            currency_id: "BRL",
-            picture_url: i.imagem_url ?? undefined,
-          })),
+          items: mpItems,
           payer: {
             name: data.customer_name,
             email: data.customer_email,
