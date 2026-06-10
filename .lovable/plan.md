@@ -1,93 +1,65 @@
-# Sprint Extra — Melhorias para o lançamento
+## Objetivo
 
-Mantemos a regra: loja exclusiva da Mimando, só a admin cria/edita produtos. Nada de marketplace.
+Validar de ponta a ponta o fluxo de cupom e o controle de estoque (sem alterar regras) e entregar uma página de confirmação/status de pedido para a cliente acompanhar a compra após o pagamento.
 
-## 1. Banner editável da home
+## 1. Verificação do fluxo de cupom (somente teste, sem alterar lógica)
 
-- Nova tabela `site_settings` (singleton, chave `home_banner`) com: `titulo`, `subtitulo`, `botao_texto`, `botao_link`, `imagem_url`, `updated_at`.
-- Server fns: `getHomeBanner` (público) e `updateHomeBanner` (admin).
-- Página `/admin/banner` no painel: form com pré‑visualização e upload via URL de imagem (mantendo o padrão atual de produtos).
-- `src/routes/index.tsx` passa a ler o banner do banco em vez do texto fixo (fallback para os textos atuais se vazio).
+Roteiro de teste no preview, com print/relato do resultado:
 
-## 2. Cupons de desconto
+1. Logar como administradora → `/admin/cupons` → criar cupom `MIMA10` (percent, 10%, sem mínimo, ativo, validade futura) e `FRETE20` (fixed, R$ 20, mínimo R$ 100).
+2. Logar como cliente → adicionar 2 produtos no carrinho → `/carrinho`.
+3. Aplicar `MIMA10`: confirmar toast, linha "Desconto (MIMA10)" e novo total = `subtotal − round(subtotal*0.1, 2)`.
+4. Alterar quantidades: o desconto recalcula automaticamente (já implementado em `cart.tsx`).
+5. Tentar `FRETE20` com subtotal < R$ 100 → deve recusar com motivo do servidor.
+6. Aplicar com subtotal ≥ R$ 100 → desconto de R$ 20.
+7. Ir a `/checkout` → confirmar que o resumo mostra cupom e total descontado.
+8. Submeter o formulário → consultar a tabela `orders` (read_query) confirmando `cupom_codigo`, `desconto` e `total` salvos coerentes; conferir `order_items` e o valor enviado ao Mercado Pago (linha de log/initPoint) bate com o total.
+9. Caso o servidor recalcule diferente do cliente, o erro é registrado e reportado (sem mexer no código nesta etapa).
 
-- Tabela `coupons`: `codigo` (único, upper), `tipo` (`percent` | `fixed`), `valor` (numeric), `validade` (date null = sem validade), `ativo` (bool), `min_subtotal` (opcional).
-- RLS: SELECT público apenas via server fn (admin elevado); INSERT/UPDATE/DELETE só admin.
-- Server fns:
-  - `validateCoupon({ codigo, subtotal })` → retorna `{ valido, desconto, motivo }`.
-  - CRUD admin: `listCoupons`, `createCoupon`, `updateCoupon`, `deleteCoupon`, `toggleCoupon`.
-- Painel: `/admin/cupons` com tabela + form (criar/editar/ativar/desativar).
-- Carrinho (`/_authenticated/carrinho`): input “Cupom de desconto” → aplica via `validateCoupon`, mostra linha de desconto e novo total. Cupom guardado no estado do carrinho.
-- Checkout: persiste `cupom_codigo` e `desconto` no pedido (adiciona colunas em `orders`).
+Saída: relato curto com ✅/❌ por passo. Se algum passo falhar, abro um plano específico de correção.
 
-## 3. Controle de estoque
+## 2. Verificação do controle de estoque (somente teste)
 
-- A coluna `estoque` já existe em `products`. Vamos:
-  - Exibir e editar `estoque` no `ProductForm` (input numérico).
-  - Quando `estoque <= 0`, tratar como esgotado independente de `disponivel`.
-  - Atualizar `isSoldOut(p)` em `src/lib/shop.ts` (helper único usado em cards, detalhe, favoritos).
-  - Cards e página de detalhe: bloqueiam botão “Adicionar ao carrinho” quando esgotado e trocam o texto do WhatsApp para “Consultar disponibilidade” (mensagem específica).
-  - Decrementar estoque ao concluir pedido aprovado (no fluxo atual de webhook do Mercado Pago, dentro de transação simples por item).
+1. Em `/admin`, editar um produto e definir `estoque = 0` (mantendo `disponivel = true`).
+2. Conferir no card de `/produtos`, em `/favoritos`, na home e na página `/produtos/$id`:
+   - Selo "Esgotado" aparece com prioridade sobre os outros.
+   - Botão "Adicionar ao carrinho" desabilitado.
+   - Botão de WhatsApp usa `whatsappConsultarLink` ("consultar disponibilidade").
+3. Aumentar estoque para 3 → selo some, botões voltam ao normal.
+4. Simular pedido pago via webhook de teste → estoque decrementa conforme quantidade.
 
-## 4. Produto personalizável
+Saída: relato ✅/❌. Correções entram em plano à parte se necessário.
 
-- Nova coluna `is_personalizavel boolean default false` em `products`.
-- Form admin: checkbox “Produto personalizável”.
-- `ProductBadges`: novo `PersonalizavelBadge` (rosa/lilás).
-- Página de detalhe: aviso destacado + botão WhatsApp com mensagem pronta:
-  > “Olá! Tenho interesse em personalizar o produto [nome] que vi no site Mimando Papelaria Fofa e Presentes Criativos.”
-- Helper `whatsappPersonalizadoLink(nome)` em `src/lib/shop.ts`.
+## 3. Página de confirmação/status do pedido (entrega de código)
 
-## 5. Selos extras e “Mais queridinhos da loja”
+Hoje `/checkout/sucesso` é estático e não mostra qual pedido foi pago. Vou ligá-la ao último pedido da cliente e criar uma rota de detalhe reutilizável.
 
-- Novas colunas em `products`: `is_bestseller`, `is_novidade`, `is_promocao` (bool). Mantemos `is_featured` (Destaque) e `badge` custom.
-- Form admin: switches para cada selo.
-- Componentes em `ProductBadges.tsx`: `BestsellerBadge`, `NovidadeBadge`, `PromocaoBadge` (+ os já existentes).
-- Home: nova seção **“Mais queridinhos da loja”** entre Destaques e Categorias, listando `is_bestseller = true` (server fn `listBestsellers`).
-- Selos aparecem em cards (catálogo, home, favoritos) e na página de detalhe, com prioridade visual: Esgotado > Promoção > Destaque > Mais vendido > Novidade/Novo > Personalizável > custom.
+### Novos/alterados
 
-## 6. Presentes por ocasião
+- `src/lib/orders.functions.ts` — adicionar:
+  - `getOrderById({ id })` (com `requireSupabaseAuth`): retorna o pedido + itens apenas se `user_id = auth.uid()` (RLS já garante; valida também no código). Inclui status do pagamento, total, desconto, cupom, endereço, itens com nome/qtd/preço.
+  - `getLatestOrder()` (com `requireSupabaseAuth`): retorna o pedido mais recente do usuário (usado quando o Mercado Pago redireciona sem `order_id`).
 
-- Nova tabela `occasions` (`slug`, `nome`, `ordem`) — seed: Aniversário, Dia dos Namorados, Amiga especial, Professores, Mãe, Pai, Natal, Volta às aulas.
-- Tabela de junção `product_occasions` (`product_id`, `occasion_slug`).
-- Server fns: `listOccasions`, `listProductsByOccasion(slug)`, e admin `setProductOccasions(productId, slugs[])`.
-- Form admin: grupo de checkboxes “Ocasiões”.
-- Home: seção **“Escolha por ocasião”** com cards/chips coloridos linkando para `/ocasioes/$slug`.
-- Nova rota `src/routes/ocasioes.$slug.tsx` listando produtos da ocasião (mesmo grid do catálogo).
-- Catálogo `/produtos`: novo filtro “Ocasião” (select) que usa o mesmo server fn.
+- `src/components/OrderStatusCard.tsx` — componente compartilhado: badge de status (Aguardando pagamento / Aprovado / Pendente / Recusado / Cancelado), data, total com desconto destacado, lista de itens, endereço de entrega, código do pedido, link de WhatsApp para tirar dúvida.
 
-## 7. Painel admin — atualizações
+- `src/routes/_authenticated/pedido.$id.tsx` (nova): página "Detalhes do pedido". Usa `useSuspenseQuery` com `getOrderById`. `notFoundComponent` e `errorComponent` definidos.
 
-Sidebar/cabeçalho do `/admin` ganha atalhos: **Banner**, **Cupons**, **Avaliações**, **Pedidos**, **Adicionar produto**. Lista de produtos passa a mostrar estoque e ícones dos novos selos.
+- `src/routes/_authenticated/checkout/sucesso.tsx` (atualizar): lê `?order_id=` da URL (quando o webhook/MP retornar) ou cai em `getLatestOrder`. Mostra mensagem de agradecimento + `OrderStatusCard`. Botões: "Ver meus pedidos" e "Continuar comprando". Polling leve (refetch a cada 4s por até 1 min) para o status mudar de `pending` → `paid` assim que o webhook processar.
 
-## Detalhes técnicos
+- `src/routes/_authenticated/checkout/pendente.tsx` e `falha.tsx` (atualizar): reaproveitar `OrderStatusCard` com mensagens adequadas e link "Tentar novamente" / "Falar no WhatsApp".
 
-- Migrações (uma migration única):
-  - `ALTER TABLE products ADD COLUMN is_personalizavel/is_bestseller/is_novidade/is_promocao bool default false`.
-  - `CREATE TABLE site_settings`, `coupons`, `occasions`, `product_occasions` + GRANTs + RLS (leitura pública para `site_settings`/`occasions`/`product_occasions`; escrita só admin via `has_role`). `coupons` sem leitura pública.
-  - `ALTER TABLE orders ADD COLUMN cupom_codigo text, desconto numeric default 0`.
-  - Seed das ocasiões.
-- Arquivos novos:
-  - `src/lib/site-settings.functions.ts`
-  - `src/lib/coupons.functions.ts`
-  - `src/lib/occasions.functions.ts`
-  - `src/routes/_authenticated/admin/banner.tsx`
-  - `src/routes/_authenticated/admin/cupons.tsx`
-  - `src/routes/ocasioes.$slug.tsx`
-  - Componentes: novos badges, `CouponInput.tsx`, `OccasionPicker.tsx`.
-- Arquivos editados:
-  - `src/lib/shop.ts` (helpers de estoque, WhatsApp personalizado, lista de ocasiões).
-  - `src/lib/products.functions.ts` e `admin-products.functions.ts` (novas colunas + ocasiões + `listBestsellers`).
-  - `src/components/ProductForm.tsx`, `ProductBadges.tsx`.
-  - `src/routes/index.tsx` (banner dinâmico + Mais queridinhos + Ocasiões).
-  - `src/routes/produtos.tsx` e `produtos.$id.tsx` (selos, estoque, personalizável, filtro de ocasião).
-  - `src/routes/_authenticated/carrinho.tsx` e `checkout/index.tsx` (cupom + desconto).
-  - `src/routes/_authenticated/admin/index.tsx` (atalhos + estoque na lista).
-  - `src/routes/_authenticated/favoritos.tsx` (novos selos).
-  - Webhook Mercado Pago: decremento de estoque.
+- `src/routes/_authenticated/meus-pedidos.tsx` (atualizar): cada item da lista vira `<Link to="/pedido/$id">` para abrir o detalhe.
 
-## Fora de escopo
+- `src/lib/orders.functions.ts` (`createCheckoutPreference`): incluir `order_id` nas URLs `back_urls` do Mercado Pago (`/checkout/sucesso?order_id=...`, idem `pendente` e `falha`) para a confirmação saber qual pedido exibir.
 
-- Upload nativo de imagens (continua por URL). Posso adicionar storage bucket num próximo sprint se quiser.
-- Cupom de “frete grátis” real (sem cálculo de frete no projeto). Tratamos `FRETEGRATIS` como cupom de valor fixo configurável.
-- Marketplace, múltiplos vendedores, painel de vendedor — explicitamente excluído.
+- E-mail de confirmação: fora do escopo deste sprint (sem provedor configurado). A "confirmação clara para o cliente" é entregue pela página de sucesso + página de detalhe + lista "Meus pedidos", todas mostrando o status atual sincronizado pelo webhook.
+
+### Regras mantidas
+
+- Só a dona cria/edita cupons e produtos (RLS + `has_role('admin')`).
+- Nenhuma alteração de schema.
+- Sem marketplace, sem painel de vendedor.
+
+## Resumo do que entra em código
+
+Apenas os arquivos do item 3 acima. Itens 1 e 2 são testes de QA com relato no chat; qualquer bug encontrado vira um plano de correção próprio.

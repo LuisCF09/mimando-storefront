@@ -142,6 +142,27 @@ export const getOrder = createServerFn({ method: "GET" })
     return mapOrder(order, items ?? []);
   });
 
+export const getLatestOrder = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    const { supabase, userId } = context;
+    const { data: order, error } = await supabase
+      .from("orders")
+      .select("*")
+      .eq("user_id", userId)
+      .order("created_at", { ascending: false })
+      .limit(1)
+      .maybeSingle();
+    if (error) throw new Error(error.message);
+    if (!order) return null;
+    const { data: items, error: ie } = await supabase
+      .from("order_items")
+      .select("*")
+      .eq("order_id", order.id);
+    if (ie) throw new Error(ie.message);
+    return mapOrder(order, items ?? []);
+  });
+
 const cartItemSchema = z.object({
   productId: z.string().uuid(),
   quantity: z.number().int().min(1).max(99),

@@ -83,14 +83,14 @@ function CheckoutPage() {
       if (!res.configured) {
         toast.success("Pedido registrado!", { description: res.message });
         clear();
-        router.navigate({ to: "/meus-pedidos" });
+        router.navigate({ to: "/checkout/sucesso", search: { order: res.orderId } });
         return;
       }
       clear();
       if (res.initPoint) {
         window.location.href = res.initPoint;
       } else {
-        toast.error("Não foi possível abrir o checkout do Mercado Pago.");
+        router.navigate({ to: "/checkout/sucesso", search: { order: res.orderId } });
       }
     } catch (err: any) {
       toast.error(err.message ?? "Erro ao processar checkout.");

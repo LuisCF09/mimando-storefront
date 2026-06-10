@@ -44,30 +44,32 @@ function MeusPedidos() {
           {data!.map((o) => {
             const s = statusLabel[o.payment_status] ?? statusLabel.pending;
             return (
-              <Card key={o.id} className="rounded-2xl p-5 shadow-card">
-                <div className="flex flex-wrap items-center justify-between gap-2">
-                  <div>
-                    <p className="text-xs text-muted-foreground">Pedido</p>
-                    <p className="font-mono text-sm font-semibold">#{o.id.slice(0, 8)}</p>
+              <Card key={o.id} className="rounded-2xl p-5 shadow-card transition hover:shadow-soft">
+                <Link to="/pedido/$id" params={{ id: o.id }} className="block">
+                  <div className="flex flex-wrap items-center justify-between gap-2">
+                    <div>
+                      <p className="text-xs text-muted-foreground">Pedido</p>
+                      <p className="font-mono text-sm font-semibold">#{o.id.slice(0, 8)}</p>
+                    </div>
+                    <Badge className={`rounded-full ${s.className}`}>{s.label}</Badge>
                   </div>
-                  <Badge className={`rounded-full ${s.className}`}>{s.label}</Badge>
-                </div>
-                <ul className="mt-3 space-y-1 text-sm">
-                  {o.items.map((i) => (
-                    <li key={i.id} className="flex justify-between gap-3">
-                      <span className="truncate">
-                        {i.quantity}× {i.product_name}
-                      </span>
-                      <span>{formatBRL(i.subtotal)}</span>
-                    </li>
-                  ))}
-                </ul>
-                <div className="mt-3 flex items-center justify-between border-t pt-3">
-                  <span className="text-xs text-muted-foreground">
-                    {new Date(o.created_at).toLocaleDateString("pt-BR")}
-                  </span>
-                  <span className="font-bold text-primary">{formatBRL(o.total_price)}</span>
-                </div>
+                  <ul className="mt-3 space-y-1 text-sm">
+                    {o.items.map((i) => (
+                      <li key={i.id} className="flex justify-between gap-3">
+                        <span className="truncate">
+                          {i.quantity}× {i.product_name}
+                        </span>
+                        <span>{formatBRL(i.subtotal)}</span>
+                      </li>
+                    ))}
+                  </ul>
+                  <div className="mt-3 flex items-center justify-between border-t pt-3">
+                    <span className="text-xs text-muted-foreground">
+                      {new Date(o.created_at).toLocaleDateString("pt-BR")}
+                    </span>
+                    <span className="font-bold text-primary">{formatBRL(o.total_price)}</span>
+                  </div>
+                </Link>
               </Card>
             );
           })}
