@@ -69,7 +69,7 @@ function AdminLayout() {
             return (
               <Link
                 key={t.to}
-                to={t.to}
+                to={t.to as "/admin"}
                 activeOptions={{ exact: t.exact ?? false }}
                 className="group flex shrink-0 items-center gap-1.5 rounded-t-xl border-b-2 border-transparent px-3 py-2 text-sm text-muted-foreground transition-colors hover:text-foreground"
                 activeProps={{
