@@ -169,7 +169,13 @@ export function ProductForm({
               value={estoque}
               onChange={(e) => setEstoque(e.target.value)}
             />
+            {Number(estoque) <= 0 && (
+              <p className="mt-1 text-xs text-amber-600">
+                Estoque zerado: o produto vai aparecer como “Esgotado” na loja.
+              </p>
+            )}
           </div>
+
           <div>
             <Label htmlFor="categoria">Categoria</Label>
             <Select value={categoria} onValueChange={(v) => setCategoria(v as Categoria)}>
