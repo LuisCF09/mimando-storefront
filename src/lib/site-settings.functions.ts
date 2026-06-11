@@ -66,3 +66,14 @@ export const updateHomeBanner = createServerFn({ method: "POST" })
     if (error) throw new Error(error.message);
     return { ok: true };
   });
+
+export const resetHomeBanner = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    const { supabase, userId } = context;
+    await assertAdmin(supabase, userId);
+    const { error } = await supabase.from("site_settings").delete().eq("key", KEY);
+    if (error) throw new Error(error.message);
+    return { ok: true };
+  });
+

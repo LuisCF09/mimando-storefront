@@ -4,7 +4,7 @@ import { useServerFn } from "@tanstack/react-start";
 import { adminDeleteReview, adminListReviews } from "@/lib/reviews.functions";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, Star, Trash2 } from "lucide-react";
+import { Star, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import {
   AlertDialog,
@@ -17,6 +17,7 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
+
 
 export const Route = createFileRoute("/_authenticated/admin/avaliacoes")({
   head: () => ({ meta: [{ title: "Avaliações — Painel Mimando" }] }),
@@ -43,14 +44,14 @@ function AdminReviews() {
   };
 
   return (
-    <div className="container mx-auto px-4 py-10">
-      <Link
-        to="/admin"
-        className="mb-6 inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-primary"
-      >
-        <ArrowLeft className="h-4 w-4" /> Voltar ao painel
-      </Link>
-      <h1 className="mb-6 text-3xl font-bold">Avaliações dos clientes</h1>
+    <div className="container mx-auto px-4 py-8">
+      <div className="mb-6">
+        <h1 className="text-2xl font-bold sm:text-3xl">Avaliações dos clientes</h1>
+        <p className="text-sm text-muted-foreground">
+          Aprove ou remova as avaliações deixadas no site.
+        </p>
+      </div>
+
 
       {isLoading ? (
         <p className="text-muted-foreground">Carregando…</p>

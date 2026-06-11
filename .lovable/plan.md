@@ -1,65 +1,49 @@
-## Objetivo
+## Confirmações
 
-Validar de ponta a ponta o fluxo de cupom e o controle de estoque (sem alterar regras) e entregar uma página de confirmação/status de pedido para a cliente acompanhar a compra após o pagamento.
+- Não vou criar cupons fictícios. O passo de QA do plano anterior fica descartado. Cupons só existem se a administradora cadastrar em `/admin/cupons`.
+- Vou revisar o painel admin com foco em consistência visual, navegação e atalhos. Sem mudar regras (continua acesso só da dona via `_authenticated/admin` + `has_role('admin')`).
 
-## 1. Verificação do fluxo de cupom (somente teste, sem alterar lógica)
+## Revisão do painel admin
 
-Roteiro de teste no preview, com print/relato do resultado:
+### 1. Layout compartilhado para todas as páginas do admin
+- `src/routes/_authenticated/admin/route.tsx` (hoje só `<Outlet/>`): vira layout real com:
+  - Cabeçalho fofo "Painel da Mimando ♡" + breadcrumb simples.
+  - Barra de navegação por abas (sticky no mobile, lateral no desktop a partir de `lg`): Visão geral, Produtos, Pedidos, Cupons, Avaliações, Banner. Aba ativa destacada via `activeProps`.
+  - Botão de atalho "Ver loja" (abre `/` em nova aba) e "Adicionar produto".
+- Cada subpágina passa a focar só no conteúdo (some o cabeçalho duplicado dentro de cada arquivo).
 
-1. Logar como administradora → `/admin/cupons` → criar cupom `MIMA10` (percent, 10%, sem mínimo, ativo, validade futura) e `FRETE20` (fixed, R$ 20, mínimo R$ 100).
-2. Logar como cliente → adicionar 2 produtos no carrinho → `/carrinho`.
-3. Aplicar `MIMA10`: confirmar toast, linha "Desconto (MIMA10)" e novo total = `subtotal − round(subtotal*0.1, 2)`.
-4. Alterar quantidades: o desconto recalcula automaticamente (já implementado em `cart.tsx`).
-5. Tentar `FRETE20` com subtotal < R$ 100 → deve recusar com motivo do servidor.
-6. Aplicar com subtotal ≥ R$ 100 → desconto de R$ 20.
-7. Ir a `/checkout` → confirmar que o resumo mostra cupom e total descontado.
-8. Submeter o formulário → consultar a tabela `orders` (read_query) confirmando `cupom_codigo`, `desconto` e `total` salvos coerentes; conferir `order_items` e o valor enviado ao Mercado Pago (linha de log/initPoint) bate com o total.
-9. Caso o servidor recalcule diferente do cliente, o erro é registrado e reportado (sem mexer no código nesta etapa).
+### 2. Dashboard (`/admin`)
+- Reorganiza em 4 stat cards já existentes + 2 novos: Pedidos pagos (mês), Faturamento (mês, soma `total_price` com `payment_status=paid`).
+- Tabela "Últimos pedidos" ganha link clicável para `/pedido/$id` (reuso da página criada agora) e badge de status traduzida ("Pago", "Pendente"...).
+- Lista de produtos vira tabela responsiva com colunas: imagem, nome+categoria, preço, estoque (com cor: vermelho 0, amarelo ≤5), badges, ações. Filtro por nome/categoria e ordenação por estoque/preço (estado em search params).
 
-Saída: relato curto com ✅/❌ por passo. Se algum passo falhar, abro um plano específico de correção.
+### 3. Página `/admin/pedidos`
+- Filtros: status (todos/pendente/pago/cancelado/falhou) e busca por nome/email.
+- Cada linha clicável → `/pedido/$id`.
+- Exibe cupom usado e desconto.
 
-## 2. Verificação do controle de estoque (somente teste)
+### 4. Página `/admin/cupons`
+- Mantém CRUD, mas:
+  - Validação Zod no formulário (código maiúsculo, tipo, valor, validade, mínimo).
+  - Mostra estado "Expirado" automaticamente quando `validade < hoje`.
+  - Botão "Copiar código" e dica "Use em /carrinho".
+  - Sem seed/exemplo. Estado vazio explica como criar o primeiro.
 
-1. Em `/admin`, editar um produto e definir `estoque = 0` (mantendo `disponivel = true`).
-2. Conferir no card de `/produtos`, em `/favoritos`, na home e na página `/produtos/$id`:
-   - Selo "Esgotado" aparece com prioridade sobre os outros.
-   - Botão "Adicionar ao carrinho" desabilitado.
-   - Botão de WhatsApp usa `whatsappConsultarLink` ("consultar disponibilidade").
-3. Aumentar estoque para 3 → selo some, botões voltam ao normal.
-4. Simular pedido pago via webhook de teste → estoque decrementa conforme quantidade.
+### 5. Página `/admin/banner`
+- Pequenos ajustes: preview ao vivo do banner já existe; adiciono validação de URL da imagem (Zod), placeholder com sugestão, e botão "Restaurar padrão" (limpa o registro e a home volta ao texto fixo).
 
-Saída: relato ✅/❌. Correções entram em plano à parte se necessário.
+### 6. Página `/admin/avaliacoes`
+- Adiciono filtro "pendentes/aprovadas/ocultas" e ação rápida de aprovar/ocultar inline. (Já existe a parte de listar, só ajustar UI.)
 
-## 3. Página de confirmação/status do pedido (entrega de código)
+### 7. Cadastro/edição de produto
+- `ProductForm`: agrupa campos em seções ("Informações", "Imagem", "Visibilidade & destaque", "Ocasiões"). Mensagens de erro Zod inline.
+- Aviso visual quando `estoque = 0` lembrando que ficará como "Esgotado" no site.
 
-Hoje `/checkout/sucesso` é estático e não mostra qual pedido foi pago. Vou ligá-la ao último pedido da cliente e criar uma rota de detalhe reutilizável.
+### Fora do escopo
+- Nenhuma alteração de schema, RLS, ou de regras de cliente/marketplace.
+- Nenhum cupom de exemplo no banco.
 
-### Novos/alterados
+## Arquivos afetados
 
-- `src/lib/orders.functions.ts` — adicionar:
-  - `getOrderById({ id })` (com `requireSupabaseAuth`): retorna o pedido + itens apenas se `user_id = auth.uid()` (RLS já garante; valida também no código). Inclui status do pagamento, total, desconto, cupom, endereço, itens com nome/qtd/preço.
-  - `getLatestOrder()` (com `requireSupabaseAuth`): retorna o pedido mais recente do usuário (usado quando o Mercado Pago redireciona sem `order_id`).
-
-- `src/components/OrderStatusCard.tsx` — componente compartilhado: badge de status (Aguardando pagamento / Aprovado / Pendente / Recusado / Cancelado), data, total com desconto destacado, lista de itens, endereço de entrega, código do pedido, link de WhatsApp para tirar dúvida.
-
-- `src/routes/_authenticated/pedido.$id.tsx` (nova): página "Detalhes do pedido". Usa `useSuspenseQuery` com `getOrderById`. `notFoundComponent` e `errorComponent` definidos.
-
-- `src/routes/_authenticated/checkout/sucesso.tsx` (atualizar): lê `?order_id=` da URL (quando o webhook/MP retornar) ou cai em `getLatestOrder`. Mostra mensagem de agradecimento + `OrderStatusCard`. Botões: "Ver meus pedidos" e "Continuar comprando". Polling leve (refetch a cada 4s por até 1 min) para o status mudar de `pending` → `paid` assim que o webhook processar.
-
-- `src/routes/_authenticated/checkout/pendente.tsx` e `falha.tsx` (atualizar): reaproveitar `OrderStatusCard` com mensagens adequadas e link "Tentar novamente" / "Falar no WhatsApp".
-
-- `src/routes/_authenticated/meus-pedidos.tsx` (atualizar): cada item da lista vira `<Link to="/pedido/$id">` para abrir o detalhe.
-
-- `src/lib/orders.functions.ts` (`createCheckoutPreference`): incluir `order_id` nas URLs `back_urls` do Mercado Pago (`/checkout/sucesso?order_id=...`, idem `pendente` e `falha`) para a confirmação saber qual pedido exibir.
-
-- E-mail de confirmação: fora do escopo deste sprint (sem provedor configurado). A "confirmação clara para o cliente" é entregue pela página de sucesso + página de detalhe + lista "Meus pedidos", todas mostrando o status atual sincronizado pelo webhook.
-
-### Regras mantidas
-
-- Só a dona cria/edita cupons e produtos (RLS + `has_role('admin')`).
-- Nenhuma alteração de schema.
-- Sem marketplace, sem painel de vendedor.
-
-## Resumo do que entra em código
-
-Apenas os arquivos do item 3 acima. Itens 1 e 2 são testes de QA com relato no chat; qualquer bug encontrado vira um plano de correção próprio.
+Criar: nenhum.
+Editar: `src/routes/_authenticated/admin/route.tsx`, `index.tsx`, `pedidos.tsx`, `cupons.tsx`, `banner.tsx`, `avaliacoes.tsx`, `$id.tsx`, `novo.tsx`, `src/components/ProductForm.tsx`.

@@ -1,9 +1,8 @@
-import { createFileRoute, useRouter, Link } from "@tanstack/react-router";
+import { createFileRoute, useRouter } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import { ProductForm } from "@/components/ProductForm";
 import { createProduct } from "@/lib/admin-products.functions";
 import { toast } from "sonner";
-import { ArrowLeft } from "lucide-react";
 
 export const Route = createFileRoute("/_authenticated/admin/novo")({
   head: () => ({
@@ -16,14 +15,13 @@ function NovoProduto() {
   const router = useRouter();
   const createFn = useServerFn(createProduct);
   return (
-    <div className="container mx-auto px-4 py-10">
-      <Link
-        to="/admin"
-        className="mb-6 inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-primary"
-      >
-        <ArrowLeft className="h-4 w-4" /> Voltar ao painel
-      </Link>
-      <h1 className="mb-6 text-3xl font-bold">Novo produto</h1>
+    <div className="container mx-auto px-4 py-8">
+      <div className="mb-6">
+        <h1 className="text-2xl font-bold sm:text-3xl">Novo produto</h1>
+        <p className="text-sm text-muted-foreground">
+          Adicione um produto à loja. Você poderá editar a qualquer momento.
+        </p>
+      </div>
       <ProductForm
         submitLabel="Salvar produto"
         onSubmit={async (v) => {

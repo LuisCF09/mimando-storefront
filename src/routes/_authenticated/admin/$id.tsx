@@ -1,10 +1,9 @@
-import { createFileRoute, useRouter, Link } from "@tanstack/react-router";
+import { createFileRoute, useRouter } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import { useQuery } from "@tanstack/react-query";
 import { ProductForm } from "@/components/ProductForm";
 import { adminGetProduct, updateProduct } from "@/lib/admin-products.functions";
 import { toast } from "sonner";
-import { ArrowLeft } from "lucide-react";
 
 export const Route = createFileRoute("/_authenticated/admin/$id")({
   head: () => ({
@@ -25,14 +24,13 @@ function EditarProduto() {
   });
 
   return (
-    <div className="container mx-auto px-4 py-10">
-      <Link
-        to="/admin"
-        className="mb-6 inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-primary"
-      >
-        <ArrowLeft className="h-4 w-4" /> Voltar ao painel
-      </Link>
-      <h1 className="mb-6 text-3xl font-bold">Editar produto</h1>
+    <div className="container mx-auto px-4 py-8">
+      <div className="mb-6">
+        <h1 className="text-2xl font-bold sm:text-3xl">Editar produto</h1>
+        {data && (
+          <p className="text-sm text-muted-foreground">{data.nome}</p>
+        )}
+      </div>
       {isLoading ? (
         <p className="text-muted-foreground">Carregando…</p>
       ) : error ? (

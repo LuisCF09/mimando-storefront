@@ -27,6 +27,8 @@ export type Order = {
   total_price: number;
   payment_status: "pending" | "paid" | "canceled" | "failed";
   payment_method: string;
+  cupom_codigo: string | null;
+  desconto: number;
   mercado_pago_preference_id: string | null;
   mercado_pago_payment_id: string | null;
   created_at: string;
@@ -50,6 +52,8 @@ function mapOrder(o: any, items: any[]): Order {
     total_price: Number(o.total_price),
     payment_status: o.payment_status,
     payment_method: o.payment_method,
+    cupom_codigo: o.cupom_codigo ?? null,
+    desconto: Number(o.desconto ?? 0),
     mercado_pago_preference_id: o.mercado_pago_preference_id ?? null,
     mercado_pago_payment_id: o.mercado_pago_payment_id ?? null,
     created_at: o.created_at,
@@ -65,6 +69,7 @@ function mapOrder(o: any, items: any[]): Order {
       })),
   };
 }
+
 
 async function assertAdmin(supabase: any, userId: string) {
   const { data } = await supabase
